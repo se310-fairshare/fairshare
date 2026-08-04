@@ -1,0 +1,27 @@
+name: Bug report
+description: "TODO: Issue team must complete the FairShare bug-report form"
+title: "[Bug]: "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        TODO: Issue team — replace this placeholder with the approved bug-report form.
+
+        The final form should request:
+        - Bug description
+        - Steps to reproduce
+        - Expected behaviour
+        - Actual behaviour
+        - Environment details
+        - Additional context
+        - Confirmation that duplicate issues were checked
+        - Confirmation that the latest version was tested
+
+  - type: checkboxes
+    id: placeholder-confirmation
+    attributes:
+      label: Template status
+      options:
+        - label: I understand that this issue form is still awaiting completion by the issue team.
+          required: true

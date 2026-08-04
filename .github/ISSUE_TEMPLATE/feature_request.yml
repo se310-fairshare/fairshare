@@ -1,0 +1,27 @@
+name: Feature request
+description: "TODO: Issue team must complete the FairShare feature-request form"
+title: "[Feature]: "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        TODO: Issue team — replace this placeholder with the approved feature-request form.
+
+        The final form should request:
+        - Problem or motivation
+        - Proposed feature
+        - Intended behaviour
+        - Alternatives considered
+        - Relevant dependencies
+        - Intended release: A1, A2 or unplanned
+        - Additional context
+        - Confirmation that duplicate issues were checked
+
+  - type: checkboxes
+    id: placeholder-confirmation
+    attributes:
+      label: Template status
+      options:
+        - label: I understand that this issue form is still awaiting completion by the issue team.
+          required: true
