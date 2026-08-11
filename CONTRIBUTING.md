@@ -73,9 +73,11 @@ frontend/   React 19 single-page application, built with Vite 8
 
 The frontend is a single-page application that calls the backend over HTTP and holds no business logic of its own.
 The backend owns expense calculation and settlement, exposed as a REST API under the `nz.ac.auckland.se310.fairshare` package.
-Persistence through MySQL and Spring Data JPA is to be added under issue [#22](https://github.com/se310-fairshare/fairshare/issues/22); until then the backend keeps no state between restarts.
-Backend testing uses JUnit and Mockito.
-Frontend testing with Vitest is to be added.
+Persistence uses MySQL through Spring Data JPA and Hibernate, tracked under issue [#22](https://github.com/se310-fairshare/fairshare/issues/22).
+Datasource credentials are supplied only through environment variables and are never committed.
+Hibernate runs with `ddl-auto=validate`, so it checks entity mappings against the existing schema and never creates or alters tables; schema changes come from version-controlled migrations, tracked under issue [#37](https://github.com/se310-fairshare/fairshare/issues/37).
+Backend testing uses JUnit and Mockito, with Testcontainers for database integration tests.
+Frontend testing with Vitest is tracked separately.
 
 ## First contributions
 
@@ -91,10 +93,16 @@ Prerequisites:
 - JDK 21
 - Node.js 22 or later
 - Git
+- MySQL 8.4, for running the backend
+- Docker for running the backend test suite
 
 Maven does not need to be installed, as the repository includes the Maven wrapper.
 
 Clone a fork of the repository, then start either application.
+
+The backend requires a running MySQL database and will not start without one.
+Create the database and set `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME` and `SPRING_DATASOURCE_PASSWORD` as described on the [MySQL persistence setup](https://github.com/se310-fairshare/fairshare/wiki/MySQL-Persistence-Setup) wiki page.
+Credentials belong in the environment, never in `application.properties` or any committed file.
 
 Backend, served on port 8080:
 
@@ -103,7 +111,7 @@ cd backend
 ./mvnw spring-boot:run
 ```
 
-No endpoints exist yet, so a request to `/` returns 404 until the first controller is added.
+A request to `/` returns 404 unless a root route has been implemented.
 
 Frontend, served on port 5173:
 
@@ -115,7 +123,9 @@ npm run dev
 
 ## Running the tests
 
-The backend test suite runs through the Maven wrapper:
+The backend test suite runs through the Maven wrapper and needs Docker running.
+The database integration tests start a MySQL container through Testcontainers and fail rather than skip when no Docker daemon is available.
+The tests use no local database credentials.
 
 ```bash
 cd backend
@@ -139,7 +149,16 @@ Both commands are run by the CI workflow on every push to `main` and on every pu
 3. Claim the issue by assigning it or by commenting and asking a maintainer to assign it.
    Only one open issue may be claimed at a time.
 4. Fork the repository and clone the fork.
-5. Create a feature branch from `main`, named as described under the conventions below.
+5. Update from upstream, then create a feature branch, named as described under the conventions below.
+   Never commit to the fork's `main` and never open a pull request from it.
+
+   ```bash
+   git fetch upstream
+   git switch main
+   git rebase upstream/main
+   git switch -c <type>/<issue-number>-<short-description>
+   ```
+
 6. Make the changes in the feature branch, adding tests alongside any code.
 7. Rebase against `main` regularly rather than waiting until the work is complete.
 8. Run the test suite and the application and confirm the change behaves as expected.
@@ -166,10 +185,11 @@ Features are proposed through the [feature request template](https://github.com/
 A proposal is written as a user story, stating the type of user, the goal and the benefit, followed by acceptance criteria in the given /when/then form.
 Proposals are assessed on whether they fit the product vision above, whether they duplicate an existing issue and whether they depend on work that is not yet complete.
 
-The team approves new issues at the weekly group meeting before any work begins.
+New issues are approved before any work begins, either at the weekly group meeting or by a delegated team member where the work needs to be started before the next meeting.
 Approval confirms that a bug report reproduces, that a feature request suits the product, that no duplicate already exists and that dependencies to other issues are flagged.
 Where information is missing, the submitter is asked for it in a comment before the issue is approved.
-A team member then records the approval as a comment on the issue, stating that it was agreed at a group meeting.
+A team member records the approval as a comment on the issue, stating whether it was agreed at a group meeting or by a delegated approver.
+An issue is not approved by its own author.
 
 ## Code review process
 
@@ -182,8 +202,8 @@ Problems found during review are fixed in the same pull request rather than defe
 Once both approvals are in place, the author or a delegated team member squashes the commits and merges.
 Merging without the required approvals is not permitted.
 
-Reviews are normally returned within a day or two.
-Contributors are asked to allow enough time before any deadline for a review to take place.
+The team allows one business day for a review of draft work.
+Contributors are asked to leave enough time before any deadline for that review to take place.
 
 ## Conventions
 
@@ -203,8 +223,11 @@ JavaScript and JSX use two-space indentation.
 
 ## Getting in touch
 
-All project communication happens in GitHub issues and pull requests, which keeps decisions recorded against the work they concern.
+Outside contributors reach the project through GitHub.
 Questions about a specific issue or pull request belong in a comment on that issue or pull request.
 General questions are raised as a new issue with the `question` label.
+The project does not provide support by email or private message.
 
-The team does not provide support by email or private message.
+The team itself also uses Discord for general coordination and status updates, alongside the weekly meeting.
+Anything decided there about a specific issue, pull request or commit is copied into a comment on that item, stating that it records a Discord or meeting discussion, so the reasoning stays attached to the work.
+A response on any channel is expected within one business day.
