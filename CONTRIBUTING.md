@@ -19,7 +19,7 @@ The project is looking for:
 The project is not looking for:
 
 - Changes without an associated approved issue
-- Large refactor or reformatting that are unrelated to an open issue
+- Large refactor or reformatting that is unrelated to an open issue
 - New dependencies where the standard library or an existing dependency is sufficient
 - Changes to the technology stack agreed in the project proposal
 
@@ -34,6 +34,9 @@ Technical expectations for any code contribution:
 - The existing test suite passes, and the application runs before a pull request is opened
 - External dependencies are declared through the package manager, in `backend/pom.xml` or `frontend/package.json`
 - Any use of generative AI tools is acknowledged in the pull request description
+
+Coordination happens in issue and pull request comments so that decisions stay visible alongside the work they concern.
+Where a decision was reached in a group meeting, the comment states that it records a meeting discussion.
 
 ## Project vision and roadmap
 
@@ -163,9 +166,10 @@ Features are proposed through the [feature request template](https://github.com/
 A proposal is written as a user story, stating the type of user, the goal and the benefit, followed by acceptance criteria in the given /when/then form.
 Proposals are assessed on whether they fit the product vision above, whether they duplicate an existing issue and whether they depend on work that is not yet complete.
 
-The team approves new issues before any work begins.
-Approval confirms that the request suits the product, that no duplicate exists and that dependencies are flagged.
-Approval is recorded as a comment on the issue.
+The team approves new issues at the weekly group meeting before any work begins.
+Approval confirms that a bug report reproduces, that a feature request suits the product, that no duplicate already exists and that dependencies to other issues are flagged.
+Where information is missing, the submitter is asked for it in a comment before the issue is approved.
+A team member then records the approval as a comment on the issue, stating that it was agreed at a group meeting.
 
 ## Code review process
 
@@ -177,6 +181,9 @@ Problems found during review are fixed in the same pull request rather than defe
 
 Once both approvals are in place, the author or a delegated team member squashes the commits and merges.
 Merging without the required approvals is not permitted.
+
+Reviews are normally returned within a day or two.
+Contributors are asked to allow enough time before any deadline for a review to take place.
 
 ## Conventions
 
