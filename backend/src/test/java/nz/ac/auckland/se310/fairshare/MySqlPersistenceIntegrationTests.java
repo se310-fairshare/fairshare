@@ -25,13 +25,7 @@ class MySqlPersistenceIntegrationTests {
     private JdbcTemplate jdbcTemplate;
 
     @Test
-    void writesAndReadsDataFromMySql() {
-        jdbcTemplate.execute("""
-                CREATE TABLE persistence_probe (
-                    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-                    message VARCHAR(255) NOT NULL
-                )
-                """);
+    void appliesMigrationsAndPersistsData() {
         jdbcTemplate.update(
                 "INSERT INTO persistence_probe (message) VALUES (?)",
                 "connected");
@@ -41,5 +35,16 @@ class MySqlPersistenceIntegrationTests {
                 String.class);
 
         assertThat(storedMessage).isEqualTo("connected");
+
+        var appliedVersions = jdbcTemplate.queryForList(
+                """
+                SELECT version
+                FROM flyway_schema_history
+                WHERE success = TRUE
+                ORDER BY installed_rank
+                """,
+                String.class);
+
+        assertThat(appliedVersions).contains("1", "9999");
     }
 }
