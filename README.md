@@ -16,9 +16,9 @@ Please follow the guidelines outlined in [CONTRIBUTING.MD](https://github.com/se
 
 
 # Technology Stack
-**Language**: Java   
+**Language**: Java, Javascript   
 **Backend**: Spring Boot + Spring MVC  
-**Frontend**: React (HTML, CSS, Javascript)  
+**Frontend**: React (HTML, CSS) 
 **Database**: MySQL  
 **Data access**: Spring Data JPA/Hibernate  
 **Build tool**: Maven  
