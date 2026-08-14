@@ -22,7 +22,7 @@ Please follow the guidelines outlined in [CONTRIBUTING.MD](https://github.com/se
 **Database**: MySQL  
 **Data access**: Spring Data JPA/Hibernate  
 **Build tool**: Maven  
-**Testing**: Backend: JUnit + Mockito  
+**Testing**: Backend: JUnit, Mockito, Testcontainers (Docker)
 **Frontend**: Vitest + (Cypress)  
 **CI**: GitHub Actions  
 **Code quality**: SonarCloud and Snyk  
