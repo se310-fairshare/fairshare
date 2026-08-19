@@ -1,5 +1,5 @@
 import { beforeEach, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import GroupMembers from '../src/pages/GroupMembers.jsx';
@@ -82,8 +82,10 @@ it('AC4: removes a member with a zero balance', async () => {
     renderPage();
 
     expect(await screen.findByText('bob')).toBeInTheDocument();
-    const removeButtons = screen.getAllByRole('button', { name: 'Remove' });
-    await user.click(removeButtons[1]);
+    await user.click(screen.getByRole('button', { name: 'Remove' }));
+    const dialog = screen.getByRole('dialog', { name: 'Remove bob?' });
+    expect(removeGroupMember).not.toHaveBeenCalled();
+    await user.click(within(dialog).getByRole('button', { name: 'Remove' }));
 
     expect(removeGroupMember).toHaveBeenCalledWith('5', 2);
     expect(screen.queryByText('bob')).not.toBeInTheDocument();
@@ -98,24 +100,43 @@ it('AC5: displays a blocked-removal message', async () => {
     renderPage();
 
     await screen.findByText('bob');
-    const removeButtons = screen.getAllByRole('button', { name: 'Remove' });
-    await user.click(removeButtons[1]);
+    await user.click(screen.getByRole('button', { name: 'Remove' }));
+    const dialog = screen.getByRole('dialog', { name: 'Remove bob?' });
+    await user.click(within(dialog).getByRole('button', { name: 'Remove' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
         "The member's balance must be settled before removal");
 });
 
-it('AC6: returns to the overview after the current user leaves', async () => {
+it('AC6: confirms before the current user leaves and returns to the overview', async () => {
     const user = userEvent.setup();
     getGroupMembers.mockResolvedValue({ members: [alice, bob] });
     removeGroupMember.mockResolvedValue({});
     renderPage();
 
     await screen.findByText('alice');
-    const removeButtons = screen.getAllByRole('button', { name: 'Remove' });
-    await user.click(removeButtons[0]);
+    await user.click(screen.getByRole('button', { name: 'Leave group' }));
+    const dialog = screen.getByRole('dialog', { name: 'Leave group?' });
+
+    expect(screen.getByText('You will lose access to this group.')).toBeInTheDocument();
+    expect(removeGroupMember).not.toHaveBeenCalled();
+    await user.click(within(dialog).getByRole('button', { name: 'Leave group' }));
 
     expect(await screen.findByText('Groups overview')).toBeInTheDocument();
+});
+
+it('keeps the member when removal is cancelled', async () => {
+    const user = userEvent.setup();
+    getGroupMembers.mockResolvedValue({ members: [alice, bob] });
+    renderPage();
+
+    expect(await screen.findByText('bob')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Remove' }));
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(removeGroupMember).not.toHaveBeenCalled();
+    expect(screen.getByText('bob')).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 });
 
 it('AC7: shows an authorisation error to a non-member', async () => {

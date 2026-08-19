@@ -45,3 +45,46 @@
     color: #b71c1c;
     background: #ffebee;
 }
+
+.confirmation-backdrop {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.45);
+}
+
+.confirmation-dialog {
+    width: min(400px, 100%);
+    padding: 28px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.confirmation-dialog h2 {
+    margin-top: 0;
+}
+
+.confirmation-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 24px;
+}
+
+.confirmation-actions button {
+    width: auto;
+    margin: 0;
+}
+
+.cancel-button {
+    background: #eee;
+}
+
+.confirm-remove-button {
+    color: #b71c1c;
+    background: #ffebee;
+}

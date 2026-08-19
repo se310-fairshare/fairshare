@@ -10,9 +10,9 @@ vi.mock('../src/api/groups', () => ({
     getGroup: vi.fn(),
 }));
 
-function renderPage() {
+function renderPage(initialEntries = ['/groups']) {
     render(
-        <MemoryRouter>
+        <MemoryRouter initialEntries={initialEntries}>
             <GroupsOverview />
         </MemoryRouter>
     );
@@ -59,5 +59,17 @@ describe('GroupsOverview', () => {
         renderPage();
 
         expect(await screen.findByText(/not in any groups yet/i)).toBeInTheDocument();
+    });
+
+    it('shows confirmation after the user leaves a group', async () => {
+        getGroups.mockResolvedValue([]);
+
+        renderPage([{
+            pathname: '/groups',
+            state: { notice: 'You left the group.' },
+        }]);
+
+        expect(await screen.findByRole('status')).toHaveTextContent(
+            'You left the group.');
     });
 });

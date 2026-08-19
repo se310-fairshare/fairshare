@@ -40,3 +40,11 @@
     text-decoration: none;
     color: inherit;
 }
+
+.success {
+    padding: 10px;
+    color: #1b5e20;
+    background: #e8f5e9;
+    border-radius: 5px;
+    text-align: center;
+}

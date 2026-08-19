@@ -18,6 +18,7 @@ public class ExpenseGroup {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "created_by", nullable = false, updatable = false)
+    // Historical creator metadata only; roster permissions depend on current membership.
     private User createdBy;
 
     @Column(name = "group_name", nullable = false, length = 50)

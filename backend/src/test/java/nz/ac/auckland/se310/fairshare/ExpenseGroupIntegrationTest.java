@@ -158,6 +158,23 @@ class ExpenseGroupIntegrationTest {
     }
 
     @Test
+    void manageAc4_creatorCanLeaveWithoutDeletingGroupOrChangingCreatorMetadata() {
+        GroupResponse created = groupService.createGroup(
+                new CreateGroupRequest("Flat 3", null), aliceId);
+        groupService.addMember(created.id(), "bob@test.com", aliceId);
+
+        groupService.removeMember(created.id(), aliceId, aliceId);
+
+        assertThat(groupRepository.findById(created.id())).isPresent();
+        assertThat(groupService.getGroup(created.id(), bobId).id()).isEqualTo(created.id());
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT created_by FROM expense_group WHERE group_id = ?",
+                Long.class,
+                created.id())).isEqualTo(aliceId);
+        assertThat(groupService.getGroupsForUser(aliceId)).isEmpty();
+    }
+
+    @Test
     void manageAc5_rejectsRemovalWithOutstandingBalance() {
         GroupResponse created = groupService.createGroup(
                 new CreateGroupRequest("Flat 3", null), aliceId);

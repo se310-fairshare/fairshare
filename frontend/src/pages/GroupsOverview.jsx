@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { getGroups } from '../api/groups';
 import './GroupsOverview.css';
 
 function GroupsOverview() {
+    const location = useLocation();
     const [groups, setGroups] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -30,6 +31,10 @@ function GroupsOverview() {
         <div className="page">
             <div className="card">
                 <h1>Your Groups</h1>
+
+                {location.state?.notice && (
+                    <p className="success" role="status">{location.state.notice}</p>
+                )}
 
                 {error && <span className="error">{error}</span>}
 
