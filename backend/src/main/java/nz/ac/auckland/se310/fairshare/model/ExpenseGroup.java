@@ -49,14 +49,28 @@ public class ExpenseGroup {
     }
 
     public void addMember(User user) {
+        if (hasMember(user.getId())) {
+            throw new IllegalArgumentException("User is already a member of this group");
+        }
         members.add(new UserInGroup(this, user));
     }
 
-    public void removeMember(User user) {
-        if (user.getId().equals(createdBy.getId())) {
-            throw new IllegalStateException("The group creator cannot leave the group");
+    public UserInGroup getMember(Long userId) {
+        return members.stream()
+                .filter(member -> member.getUser().getId().equals(userId))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public boolean hasMember(Long userId) {
+        return getMember(userId) != null;
+    }
+
+    public void removeMember(UserInGroup member) {
+        if (members.size() == 1) {
+            throw new IllegalStateException("A group must have at least one member");
         }
-        members.removeIf(m -> m.getUser().getId().equals(user.getId()));
+        members.remove(member);
     }
 
     public Long getId() { return id; }

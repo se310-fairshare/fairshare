@@ -1,0 +1,2 @@
+ALTER TABLE user_in_group
+    ADD COLUMN net_balance DECIMAL(19, 2) NOT NULL DEFAULT 0.00;

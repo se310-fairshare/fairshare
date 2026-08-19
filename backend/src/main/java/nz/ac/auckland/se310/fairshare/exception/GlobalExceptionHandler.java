@@ -25,4 +25,25 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(Map.of("error", "Group not found"));
     }
+
+    @ExceptionHandler(GroupAccessDeniedException.class)
+    public ResponseEntity<Map<String, String>> handleGroupAccessDenied(
+            GroupAccessDeniedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("error", ex.getMessage()));
+    }
+
+    @ExceptionHandler(GroupMemberNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleGroupMemberNotFound(
+            GroupMemberNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", ex.getMessage()));
+    }
+
+    @ExceptionHandler(GroupMemberConflictException.class)
+    public ResponseEntity<Map<String, String>> handleGroupMemberConflict(
+            GroupMemberConflictException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of("error", ex.getMessage()));
+    }
 }

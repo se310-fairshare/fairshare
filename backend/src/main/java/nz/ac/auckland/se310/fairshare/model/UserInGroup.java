@@ -2,6 +2,8 @@ package nz.ac.auckland.se310.fairshare.model;
 
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(
         name = "user_in_group",
@@ -22,16 +24,25 @@ public class UserInGroup {
     @JoinColumn(name = "group_id", nullable = false)
     private ExpenseGroup group;
 
+    @Column(name = "net_balance", nullable = false, precision = 19, scale = 2)
+    private BigDecimal netBalance = BigDecimal.ZERO.setScale(2);
+
     protected UserInGroup() {} // JPA
 
     UserInGroup(ExpenseGroup group, User user) {
         this.group = group;
         this.user = user;
+        this.netBalance = BigDecimal.ZERO.setScale(2);
     }
 
     public Long getId() { return id; }
     public User getUser() { return user; }
     public ExpenseGroup getGroup() { return group; }
+    public BigDecimal getNetBalance() { return netBalance; }
+
+    public boolean hasOutstandingBalance() {
+        return netBalance.compareTo(BigDecimal.ZERO) != 0;
+    }
 
     @Override
     public boolean equals(Object object) {

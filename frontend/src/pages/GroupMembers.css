@@ -1,0 +1,47 @@
+.members-card {
+    width: min(560px, calc(100vw - 32px));
+}
+
+.member-list {
+    list-style: none;
+    padding: 0;
+    margin: 28px 0;
+}
+
+.member-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.member-list li div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.member-list li span {
+    color: #666;
+    font-size: 14px;
+}
+
+.member-list .you-label {
+    display: inline-block;
+    width: fit-content;
+    padding: 2px 7px;
+    color: #1b5e20;
+    background: #e8f5e9;
+    border-radius: 10px;
+    font-size: 12px;
+}
+
+.remove-button {
+    width: auto;
+    margin: 0;
+    padding: 8px 12px;
+    color: #b71c1c;
+    background: #ffebee;
+}
