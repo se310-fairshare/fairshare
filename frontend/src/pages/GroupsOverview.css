@@ -1,0 +1,50 @@
+.group-list {
+    list-style: none;
+    margin: 0 0 20px;
+    padding: 0;
+}
+
+.group-list li {
+    border-bottom: 1px solid #eee;
+}
+
+.group-list a {
+    display: flex;
+    flex-direction: column;
+    padding: 12px 0;
+    text-decoration: none;
+    color: inherit;
+}
+
+.group-list a:hover {
+    background-color: #fafafa;
+}
+
+.group-name {
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.group-meta {
+    margin-top: 4px;
+    font-size: 14px;
+    color: #666;
+}
+
+.create-link {
+    display: block;
+    padding: 12px;
+    text-align: center;
+    background-color: #eee;
+    border-radius: 5px;
+    text-decoration: none;
+    color: inherit;
+}
+
+.success {
+    padding: 10px;
+    color: #1b5e20;
+    background: #e8f5e9;
+    border-radius: 5px;
+    text-align: center;
+}

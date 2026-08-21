@@ -1,0 +1,4 @@
+CREATE TABLE persistence_probe (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    message VARCHAR(255) NOT NULL
+);

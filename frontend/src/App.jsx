@@ -1,8 +1,13 @@
-export default function App() {
-  return (
-    <main>
-      <h1>FairShare</h1>
-      <p>The project foundation is running.</p>
-    </main>
-  );
+import { Outlet } from 'react-router-dom';
+import Header from './components/Header.jsx';
+
+function App() {
+    return (
+        <>
+            <Header />
+            <Outlet />
+        </>
+    );
 }
+
+export default App;

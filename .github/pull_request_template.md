@@ -1,25 +1,36 @@
-<!--
-TODO: Documentation team
+## Summary
+Brief summary of what this pull request changes.
 
-Create the FairShare pull-request template.
+## Associated issue
+The approved issue this closes, e.g. `Closes #24`.
 
-It should align exactly with CONTRIBUTING.md and prompt contributors to include:
-- A concise summary
-- The associated approved issue
-- Changes made
-- Testing performed
-- Relevant dependencies
-- Screenshots where applicable
-- Reviewer notes
-- Generative-AI assistance disclosure
+## Changes
+The main changes, one bullet each.
 
-It should also contain a concise checklist covering:
-- Issue association and approval
-- Branch currency with main
-- Passing tests
-- Appropriate new tests
-- Running the application
-- No unrelated changes
-- Updated documentation where required
-- AI acknowledgement where applicable
--->
+-
+
+## Testing
+The commands that were run, their results and what was checked manually.
+
+## Dependencies
+Other issues or pull requests this depends on or blocks and any new external dependency
+added to `backend/pom.xml` or `frontend/package.json`.
+
+## Screenshots
+Before and after images for visible changes, if applicable.
+
+## Reviewer notes
+Anything a reviewer should know, e.g. areas to look at closely, known gaps or deferred work.
+
+## Generative AI
+If applicable, disclose how generative AI tools were used.
+
+## Checklist
+
+- [ ] Associated with an open, team-approved issue
+- [ ] Branched from `main` and rebased against it
+- [ ] Test suite passes and the application runs
+- [ ] Tests are added alongside any new or modified code
+- [ ] No unrelated changes are included
+- [ ] Documentation updated where the change requires it
+- [ ] Any use of generative AI is acknowledged above

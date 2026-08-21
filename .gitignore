@@ -12,6 +12,7 @@ npm-debug.log*
 # Local environment
 .env
 .env.*
+cookies.txt
 
 # IDEs
 .idea/
@@ -24,3 +25,12 @@ npm-debug.log*
 # Operating systems
 .DS_Store
 Thumbs.db
+
+#bin files
+backend/bin/mvnw.cmd
+
+backend/bin/pom.xml
+backend/bin/mvnw
+backend/bin/.mvn/wrapper/maven-wrapper.properties
+backend/bin/src/main/resources/application.properties
+backend/bin/src/main/resources/db/migration/V1__create_users_table.sql
