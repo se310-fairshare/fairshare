@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getGroup, getGroupMembers } from '../api/groups';
+import { getExpenses } from '../api/expenses';
 import './MemberBalance.css';
 
 function formatMoney(currency, value) {
@@ -24,9 +25,12 @@ function MemberBalance() {
                     return;
                 }
 
-                const memberResult = await getGroupMembers(id);
-                if (memberResult.error) {
-                    setError(memberResult.error);
+                const [memberResult, expenseResult] = await Promise.all([
+                    getGroupMembers(id),
+                    getExpenses(id),
+                ]);
+                if (memberResult.error || expenseResult.error) {
+                    setError(memberResult.error || expenseResult.error);
                     return;
                 }
 
@@ -40,6 +44,7 @@ function MemberBalance() {
 
                 setGroup(groupResult);
                 setMember(selectedMember);
+                setExpenses(expenseResult.expenses);
             } catch {
                 setError('Could not load the member balance. Please try again.');
             } finally {
@@ -73,7 +78,8 @@ function MemberBalance() {
     } else {
         message = `${member.username} is settled up`;
     }
-
+    // Filter expenses to only include those paid by the selected member
+    const memberExpenses = expenses.filter((expense) => String(expense.paidByUserId) === String(memberId));
     return (
         <div className="page">
             <div className="card balance-card">
@@ -83,18 +89,18 @@ function MemberBalance() {
                 <p className="balance">{message}</p>
 
                 <h2>Transaction History</h2>
-                {expenses.length === 0 ? (
+                {memberExpenses.length === 0 ? (
                         <p className="empty">No expenses yet.</p>
                     ) : (
                         <ul className="expense-list">
-                            {expenses.map((expense) => (
+                            {memberExpenses.map((expense) => (
                                 <li key={expense.id}>
                                     <span className="expense-description">{expense.description}</span>
                                     <span className="expense-meta">
                                         {expense.paidByUsername} paid on {expense.expenseDate}
                                     </span>
                                     <span className="expense-amount">
-                                        {money(group.baseCurrency, expense.amount)}
+                                        {formatMoney(group.baseCurrency, expense.amount)}
                                     </span>
                                 </li>
                             ))}

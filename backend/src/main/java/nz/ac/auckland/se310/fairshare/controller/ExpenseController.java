@@ -36,11 +36,4 @@ public class ExpenseController {
     public List<ExpenseResponse> list(@PathVariable Long groupId) {
         return expenseService.getExpensesForGroup(groupId, currentUser.currentUserId());
     }
-
-    @GetMapping("/member/{memberUserId}")
-    public List<ExpenseResponse> listForMember(
-            @PathVariable Long groupId, @PathVariable Long memberUserId) {
-        return expenseService.getExpensesForMember(
-                groupId, memberUserId, currentUser.currentUserId());
-    }
 }

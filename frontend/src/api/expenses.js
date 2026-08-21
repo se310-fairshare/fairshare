@@ -12,19 +12,6 @@ export async function getExpenses(id) {
     return { expenses: await response.json() };
 }
 
-export async function getExpensesForMember(groupId, memberId) {
-    const validGroupId = requirePositiveInteger(groupId, 'Group ID');
-    const validMemberId = requirePositiveInteger(memberId, 'Member ID');
-    const response = await fetch(
-        `${API_BASE}/groups/${validGroupId}/expenses/member/${validMemberId}`,
-        { credentials: 'include' }
-    );
-    if (!response.ok) {
-        return { error: await readError(response, 'Could not load member expenses.') };
-    }
-    return { expenses: await response.json() };
-}
-
 export async function createExpense(id, expense) {
     const groupId = requirePositiveInteger(id, 'Group ID');
     const response = await fetch(`${API_BASE}/groups/${groupId}/expenses`, {
