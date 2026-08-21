@@ -3,10 +3,20 @@ import { Link, useParams } from 'react-router-dom';
 import { getGroup, getGroupMembers } from '../api/groups';
 import './ViewBalance.css';
 
-function formatMoney(currency, value) {
-    return `${currency} ${Math.abs(Number(value)).toFixed(2)}`;
+function money(currency, value) {
+    return `${currency} ${Number(value).toFixed(2)}`;
 }
 
+function balanceLine(member, currency) {
+    const balance = Number(member.netBalance);
+    if (balance > 0) {
+        return `${member.username} is owed ${money(currency, balance)}`;
+    }
+    if (balance < 0) {
+        return `${member.username} owes ${money(currency, -balance)}`;
+    }
+    return `${member.username} is settled up`;
+}
 function ViewBalance() {
     const { id } = useParams();
     const [group, setGroup] = useState(null);
@@ -55,7 +65,7 @@ function ViewBalance() {
         );
     }
 
-    const settled = members.every((member) => Number(member.netBalance) === 0);
+    const settled = members.every((member) => Number(member.netBalance)==0);
 
     return (
         <div className="page">
@@ -67,17 +77,16 @@ function ViewBalance() {
                     <p className="empty">Everyone is settled up.</p>
                 ) : (
                     <ul className="detailed-balance-list">
+                        
                         {members.map((member) => (
-                            <li key={member.userId}>
-                                <span className="balance-member">
-                                    {member.username}
-                                    {member.currentUser && <span className="you-label">You</span>}
-                                </span>
-                                <span className={Number(member.netBalance) >= 0 ? 'balance-owed' : 'balance-due'}>
-                                    {balanceDescription(member, group.baseCurrency)}
-                                </span>
-                            </li>
+                            <li key={member.userId} className="balance">
+                                    <Link className="action" to={`/groups/${id}/balance/${member.userId}`}>{balanceLine(member, group.baseCurrency)}</Link>
+                                </li>
+                            
                         ))}
+                        
+                        
+                        
                     </ul>
                 )}
 

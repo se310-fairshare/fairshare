@@ -126,7 +126,8 @@ function GroupPage() {
                         <p className="balance">
                             Everyone is settled up. Balance: {money(group.baseCurrency, 0)}
                             <br />
-                            <Link to={`/groups/${id}/balance`}>View Detailed</Link>
+                            
+                            
                         </p>
                     ) : (
                         <ul className="balance-list">
@@ -135,8 +136,11 @@ function GroupPage() {
                                     {balanceLine(member, group.baseCurrency)}
                                 </li>
                             ))}
+                            
                         </ul>
                     )}
+                    <Link to={`/groups/${id}/balance`}>View Detailed</Link>
+                    
                 </section>
 
                 <section>

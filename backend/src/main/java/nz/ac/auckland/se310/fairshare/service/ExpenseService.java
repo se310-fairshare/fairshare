@@ -64,6 +64,21 @@ public class ExpenseService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<ExpenseResponse> getExpensesForMember(
+            Long groupId, Long memberUserId, Long currentUserId) {
+        ExpenseGroup group = groupRepository.findByIdAndMembersUserId(groupId, currentUserId)
+                .orElseThrow(GroupAccessDeniedException::new);
+        if (group.getMember(memberUserId) == null) {
+            throw new InvalidPayerException(memberUserId);
+        }
+
+        return expenseRepository.findByGroupIdAndPaidByIdOrderByExpenseDateDesc(groupId, memberUserId)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
     /**
      * AC4: the amount is split equally across every current member. Cents left over by an
      * uneven division go to the lowest user ids, so the shares always add back up to the

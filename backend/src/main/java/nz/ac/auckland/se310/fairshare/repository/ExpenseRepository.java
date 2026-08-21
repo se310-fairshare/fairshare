@@ -9,4 +9,6 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
 
     // AC7: newest first for the group's expense list
     List<Expense> findByGroupIdOrderByExpenseDateDesc(Long groupId);
+
+    List<Expense> findByGroupIdAndPaidByIdOrderByExpenseDateDesc(Long groupId, Long userId);
 }
