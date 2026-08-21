@@ -57,6 +57,13 @@ it('AC2: a new group lists no expenses and shows zero balances', async () => {
     expect(screen.getByText(/NZD 0\.00/)).toBeInTheDocument();
 });
 
+it('links to member management from the group page', async () => {
+    renderPage();
+
+    const link = await screen.findByRole('link', { name: 'Manage members' });
+    expect(link).toHaveAttribute('href', '/groups/1/members');
+});
+
 it('AC7: lists each expense with amount, description, payer and date', async () => {
     getExpenses.mockResolvedValue({
         expenses: [

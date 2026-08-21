@@ -95,6 +95,8 @@ function GroupPage() {
                 <h1>{group.name}</h1>
                 {group.description && <p className="subtitle">{group.description}</p>}
 
+                <Link to={`/groups/${id}/members`}>Manage members</Link>
+
                 <section>
                     <h2>Expenses</h2>
                     <Link className="action" to={`/groups/${id}/expenses/new`}>Add an expense</Link>
