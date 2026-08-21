@@ -7,6 +7,7 @@ import CreateGroup from './pages/CreateGroup.jsx';
 import GroupPage from './pages/GroupPage.jsx';
 import Landing from './pages/Landing.jsx';
 import GroupMembers from './pages/GroupMembers.jsx';
+import ViewBalance from './pages/ViewBalance.jsx';
 import AddExpense from './pages/AddExpense.jsx';
 import Login from './pages/Login.jsx';
 import UserManagement from './pages/UserManagement.jsx';
@@ -63,6 +64,11 @@ const router = createBrowserRouter([
             {
                 path: '/groups/:id/members',
                 element: <GroupMembers/>,
+                loader: requireAuth
+            },
+            {
+                path: '/groups/:id/balance',
+                element: <ViewBalance/>,
                 loader: requireAuth
             },
             {
