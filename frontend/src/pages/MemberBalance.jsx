@@ -70,11 +70,14 @@ function MemberBalance() {
     }
 
     const balance = Number(member.netBalance);
+    let balanceClass = "balance";
     let message;
     if (balance > 0) {
-        message = `owed ${formatMoney(group.baseCurrency, balance)}`;
+        message = `+ ${formatMoney(group.baseCurrency, balance)}`;
+        balanceClass = "balance-Positive";
     } else if (balance < 0) {
-        message = ` owes ${formatMoney(group.baseCurrency, balance)}`;
+        message = `- ${formatMoney(group.baseCurrency, balance)}`;
+        balanceClass = "balance-Negative";
     } else {
         message = `${member.username} is settled up`;
     }
@@ -86,7 +89,9 @@ function MemberBalance() {
                 <h1>{member.username}</h1>
                 <p className="subtitle">Balance in {group.name}</p>
                 <h2>Current Balance</h2>
-                <p className="balance">{message}</p>
+                <p className={balanceClass}>
+                    {message}
+                </p>
 
                 <h2>Transaction History</h2>
                 {memberExpenses.length === 0 ? (

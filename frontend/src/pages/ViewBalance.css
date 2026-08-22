@@ -33,14 +33,19 @@
     font-weight: 400;
 }
 
-.balance-owed {
-    color: #1b5e20;
-    text-align: right;
+.balance-Positive {
+    color: #0bba31;
+    font-size: 13px;
 }
 
-.balance-due {
-    color: #b71c1c;
-    text-align: right;
+.balance-Negative {
+    color: #e74c3c;
+    font-size: 13px;
+}
+
+.balance-Neutral {
+    color: #666;
+    font-size: 13px;
 }
 
 @media (max-width: 520px) {

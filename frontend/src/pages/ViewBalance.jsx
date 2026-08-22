@@ -10,13 +10,24 @@ function money(currency, value) {
 function balanceLine(member, currency) {
     const balance = Number(member.netBalance);
     if (balance > 0) {
-        return `${member.username} is owed ${money(currency, balance)}`;
+        return `+ ${money(currency, balance)}`;
     }
     if (balance < 0) {
-        return `${member.username} owes ${money(currency, -balance)}`;
+        return `- ${money(currency, -balance)}`;
     }
-    return `${member.username} is settled up`;
+    return `is settled up`;
 }
+function balanceClass(member) {
+    const balance = Number(member.netBalance);
+    if (balance > 0) {
+        return 'balance-Positive';
+    }
+    if (balance < 0) {
+        return 'balance-Negative';
+    }
+    return 'balance-Neutral';
+}
+
 function ViewBalance() {
     const { id } = useParams();
     const [group, setGroup] = useState(null);
@@ -66,6 +77,7 @@ function ViewBalance() {
     }
 
     const settled = members.every((member) => Number(member.netBalance)==0);
+    
 
     return (
         <div className="page">
@@ -80,7 +92,8 @@ function ViewBalance() {
                         
                         {members.map((member) => (
                             <li key={member.userId} className="balance">
-                                    <Link className="action" to={`/groups/${id}/balance/${member.userId}`}>{balanceLine(member, group.baseCurrency)}</Link>
+                                    <Link to={`/groups/${id}/balance/${member.userId}`}>{member.username} </Link> 
+                                    <div className = {balanceClass(member)}>{balanceLine(member, group.baseCurrency)}</div>
                                 </li>
                             
                         ))}
