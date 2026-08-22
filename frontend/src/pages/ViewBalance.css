@@ -1,0 +1,53 @@
+.balance-card {
+    width: min(620px, calc(100vw - 32px));
+}
+
+.detailed-balance-list {
+    list-style: none;
+    padding: 0;
+    margin: 28px 0;
+}
+
+.detailed-balance-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 16px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.balance-member {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+}
+
+.you-label {
+    padding: 2px 7px;
+    color: #1b5e20;
+    background: #e8f5e9;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 400;
+}
+
+
+.balance-Neutral {
+    color: #666;
+    font-size: 15px;
+}
+
+@media (max-width: 520px) {
+    .detailed-balance-list li {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .balance-owed,
+    .balance-due {
+        text-align: left;
+    }
+}
