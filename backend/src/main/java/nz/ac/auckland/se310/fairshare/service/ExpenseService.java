@@ -3,11 +3,14 @@ package nz.ac.auckland.se310.fairshare.service;
 import nz.ac.auckland.se310.fairshare.dto.CreateExpenseRequest;
 import nz.ac.auckland.se310.fairshare.dto.ExpenseResponse;
 import nz.ac.auckland.se310.fairshare.exception.GroupAccessDeniedException;
+import nz.ac.auckland.se310.fairshare.exception.ExpenseNotFoundException;
 import nz.ac.auckland.se310.fairshare.exception.InvalidPayerException;
 import nz.ac.auckland.se310.fairshare.model.Expense;
 import nz.ac.auckland.se310.fairshare.model.ExpenseGroup;
+import nz.ac.auckland.se310.fairshare.model.ExpenseShare;
 import nz.ac.auckland.se310.fairshare.model.UserInGroup;
 import nz.ac.auckland.se310.fairshare.repository.ExpenseRepository;
+import nz.ac.auckland.se310.fairshare.repository.ExpenseShareRepository;
 import nz.ac.auckland.se310.fairshare.repository.ExpenseGroupRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,10 +28,13 @@ public class ExpenseService {
 
     private final ExpenseRepository expenseRepository;
     private final ExpenseGroupRepository groupRepository;
+    private final ExpenseShareRepository expenseShareRepository;
 
-    public ExpenseService(ExpenseRepository expenseRepository, ExpenseGroupRepository groupRepository) {
+
+    public ExpenseService(ExpenseRepository expenseRepository, ExpenseGroupRepository groupRepository, ExpenseShareRepository expenseShareRepository) {
         this.expenseRepository = expenseRepository;
         this.groupRepository = groupRepository;
+        this.expenseShareRepository = expenseShareRepository;
     }
 
     @Transactional
@@ -41,6 +47,15 @@ public class ExpenseService {
             throw new InvalidPayerException(request.paidByUserId()); // AC5
         }
 
+        List<UserInGroup> members = request.participantUserIds().stream()
+                .map(group::getMember)
+                .filter(java.util.Objects::nonNull)
+                .sorted(Comparator.comparingLong(m -> m.getUser().getId()))
+                .toList();
+        if (members.isEmpty()) {
+            throw new IllegalStateException("No valid participants found in the group for the expense");
+        }
+
         BigDecimal amount = request.amount().setScale(MONEY_SCALE, RoundingMode.HALF_UP);
         LocalDate expenseDate = request.expenseDate() != null ? request.expenseDate() : LocalDate.now(); // AC6
 
@@ -48,9 +63,43 @@ public class ExpenseService {
                 group, payer.getUser(), amount, request.description().trim(), expenseDate);
         Expense saved = expenseRepository.save(expense);
 
-        applyEqualSplit(group, payer, amount); // AC1, AC4
+        applyEqualSplit(payer, amount, members, saved); // AC1, AC4
 
         return toResponse(saved);
+    }
+
+    @Transactional
+    public void updateExpense(Long groupId, CreateExpenseRequest request, Long currentUserId, Long expenseId) {
+        ExpenseGroup group = groupRepository.findByIdAndMembersUserId(groupId, currentUserId)
+                .orElseThrow(GroupAccessDeniedException::new); // AC8
+
+        Expense expense = expenseRepository.findByIdAndGroupId(expenseId, groupId)
+                .orElseThrow(ExpenseNotFoundException::new);
+
+        UserInGroup originalPayer = group.getMember(expense.getPaidBy().getId());
+        UserInGroup payer = group.getMember(request.paidByUserId());
+        if (payer == null) {
+            throw new InvalidPayerException(request.paidByUserId());
+        }
+
+        List<UserInGroup> members = request.participantUserIds().stream()
+                .map(group::getMember)
+                .filter(java.util.Objects::nonNull)
+                .sorted(Comparator.comparingLong(m -> m.getUser().getId()))
+                .toList();
+        if (members.isEmpty()) {
+            throw new IllegalStateException("No valid participants found in the group for the expense");
+        }
+
+        BigDecimal amount = request.amount().setScale(MONEY_SCALE, RoundingMode.HALF_UP);
+
+        updateSplit(expense, originalPayer, payer, amount, members);
+
+        expense.setAmount(amount);
+        expense.setDescription(request.description().trim());
+        expense.setPaidBy(payer.getUser());
+
+        expenseRepository.save(expense);
     }
 
     @Transactional(readOnly = true)
@@ -64,16 +113,23 @@ public class ExpenseService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public ExpenseResponse getExpense(Long groupId, Long expenseId, Long currentUserId) {
+        groupRepository.findByIdAndMembersUserId(groupId, currentUserId)
+                .orElseThrow(GroupAccessDeniedException::new);
+
+        Expense expense = expenseRepository.findByIdAndGroupId(expenseId, groupId)
+                .orElseThrow(() -> new IllegalArgumentException("Expense not found in group"));
+
+        return toResponse(expense);
+    }
+
     /**
      * AC4: the amount is split equally across every current member. Cents left over by an
      * uneven division go to the lowest user ids, so the shares always add back up to the
      * amount the payer actually spent.
      */
-    private void applyEqualSplit(ExpenseGroup group, UserInGroup payer, BigDecimal amount) {
-        List<UserInGroup> members = group.getMembers().stream()
-                .sorted(Comparator.comparing(member -> member.getUser().getId()))
-                .toList();
-
+    private void applyEqualSplit(UserInGroup payer, BigDecimal amount, List<UserInGroup> members, Expense expense) {
         long totalCents = amount.movePointRight(MONEY_SCALE).longValueExact();
         long baseShare = totalCents / members.size();
         long extraCents = totalCents % members.size();
@@ -83,7 +139,29 @@ public class ExpenseService {
         for (int i = 0; i < members.size(); i++) {
             long shareCents = baseShare + (i < extraCents ? 1 : 0);
             members.get(i).adjustNetBalance(cents(-shareCents));
+            try {
+                expenseShareRepository.save(new ExpenseShare(members.get(i).getUser(), expense, cents(shareCents)));
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to save expense share for user " + members.get(i).getUser().getId(), e);
+            }
         }
+    }
+
+    private void updateSplit(Expense expense, UserInGroup originalPayer, UserInGroup newPayer,
+                             BigDecimal newAmount, List<UserInGroup> members) {
+        // First, reverse the previous split
+        List<ExpenseShare> existingShares = expenseShareRepository.findByExpenseId(expense.getId());
+        for (ExpenseShare share : existingShares) {
+            UserInGroup member = expense.getGroup().getMember(share.getUser().getId());
+            if (member != null) {
+                member.adjustNetBalance(share.getShareAmount());
+            }
+            expenseShareRepository.delete(share);
+        }
+        originalPayer.adjustNetBalance(expense.getAmount().negate());
+
+        // Apply the new split
+        applyEqualSplit(newPayer, newAmount, members, expense);
     }
 
     private BigDecimal cents(long value) {

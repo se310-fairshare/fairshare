@@ -50,6 +50,8 @@ it('AC1: saves the expense and returns to the group', async () => {
     await user.type(await screen.findByLabelText('Amount'), '42.50');
     await user.type(screen.getByLabelText('Description'), 'Groceries');
     await user.selectOptions(screen.getByLabelText('Paid by'), '2');
+    await user.click(screen.getByRole('checkbox', { name: 'alice' }));
+    await user.click(screen.getByRole('checkbox', { name: 'bob' }));
     await user.click(screen.getByRole('button', { name: 'Save expense' }));
 
     // The number input normalises 42.50 to 42.5; the backend stores it at two decimal places.
@@ -58,6 +60,7 @@ it('AC1: saves the expense and returns to the group', async () => {
         description: 'Groceries',
         paidByUserId: 2,
         expenseDate: today(),
+        participantUserIds: [1, 2],
     });
     expect(await screen.findByText('Flat 3')).toBeInTheDocument();
 });
@@ -79,6 +82,7 @@ it('AC3: rejects a zero, negative or non-numeric amount', async () => {
 
     const amount = await screen.findByLabelText('Amount');
     await user.type(screen.getByLabelText('Description'), 'Groceries');
+    await user.click(screen.getByRole('checkbox', { name: 'alice' }));
 
     for (const value of ['0', '-5']) {
         await user.clear(amount);
@@ -144,6 +148,7 @@ it('AC5: shows the error when the payer is no longer a group member', async () =
 
     await user.type(await screen.findByLabelText('Amount'), '10');
     await user.type(screen.getByLabelText('Description'), 'Taxi');
+    await user.click(screen.getByRole('checkbox', { name: 'alice' }));
     await user.click(screen.getByRole('button', { name: 'Save expense' }));
 
     expect(await screen.findByText('Payer must be a member of the group')).toBeInTheDocument();

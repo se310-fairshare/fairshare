@@ -6,7 +6,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
-
+import jakarta.validation.constraints.NotEmpty;
+import java.util.List;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -23,6 +24,9 @@ public record CreateExpenseRequest(
 
         @NotNull(message = "Payer is required")
         Long paidByUserId,
+
+        @NotEmpty(message = "At least one participant is required")
+        List<Long> participantUserIds,
 
         @PastOrPresent(message = "Expense date cannot be in the future")
         LocalDate expenseDate) {}

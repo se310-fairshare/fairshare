@@ -1,122 +1,90 @@
-import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import { getGroupMembers } from '../api/groups';
-import { createExpense } from '../api/expenses';
-import './AddExpense.css';
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { getGroupMembers } from "../api/groups";
+import { getExpense, updateExpense } from "../api/expenses";
+import { Link } from "react-router-dom";
+import './ManageExpense.css';
 
-// Built from local date because toISOString() reports the UTC date and
-// would give yesterday for the first hours of a New Zealand day.
-function today() {
-    const now = new Date();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    return `${now.getFullYear()}-${month}-${day}`;
+function Validate({ amount, description, paidByUserId, expenseId }) {
 }
 
-function validate({ amount, description, paidByUserId, expenseDate, participantUserIds }) {
-    const errors = {};
-
-    if (amount.trim() === '') {
-        errors.amount = 'Amount is required';                          // AC2
-    } else if (!(Number(amount) > 0)) {
-        errors.amount = 'Amount must be a positive number';            // AC3
-    }
-
-    if (description.trim() === '') {
-        errors.description = 'Description is required';                // AC2
-    }
-
-    if (paidByUserId === '') {
-        errors.paidByUserId = 'Payer is required';                     // AC2
-    }
-
-    if (expenseDate > today()) {
-        errors.expenseDate = 'Expense date cannot be in the future';   // AC6
-    }
-
-    if (!participantUserIds || participantUserIds.length === 0) {
-        errors.participantUserIds = 'At least one participant is required';   // AC4
-    }
-
-    return errors;
-}
-
-function AddExpense() {
-    const { id } = useParams();
+function EditExpense() {
+    const { id, expenseId } = useParams();
     const navigate = useNavigate();
     const [members, setMembers] = useState([]);
-    const [amount, setAmount] = useState('');
-    const [description, setDescription] = useState('');
-    const [paidByUserId, setPaidByUserId] = useState('');
-    const [expenseDate, setExpenseDate] = useState(today());   // AC6
+    const [expense, setExpense] = useState(null);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [errors, setErrors] = useState({});
+    const [amount, setAmount] = useState('');
+    const [description, setDescription] = useState('');
+    const [paidByUserId, setPaidByUserId] = useState('');
+    const [expenseDate, setExpenseDate] = useState('');
     const [participantUserIds, setParticipantUserIds] = useState([]);  // #8 AC3
 
     useEffect(() => {
-        async function loadMembers() {
-            const result = await getGroupMembers(id);
-            if (result.error) {
-                setErrors({ form: result.error });                     // AC8
+        async function loadData() {
+            const [membersResult, expenseResult] = await Promise.all([
+                getGroupMembers(id),
+                getExpense(id, expenseId)
+            ]);
+
+            if (membersResult.error) {
+                setErrors({ form: membersResult.error });
             } else {
-                setMembers(result.members);                            // AC5
-                const self = result.members.find((member) => member.currentUser);
-                setPaidByUserId(String((self ?? result.members[0])?.userId ?? ''));
+                setMembers(membersResult.members);
+            }
+            if (expenseResult.error) {
+                setErrors({ form: expenseResult.error });
+            } else {
+                setExpense(expenseResult.expense);
+                setAmount(String(expenseResult.expense.amount));
+                setDescription(expenseResult.expense.description);
+                setPaidByUserId(String(expenseResult.expense.paidByUserId));
+                setExpenseDate(expenseResult.expense.expenseDate);
             }
             setLoading(false);
         }
 
-        loadMembers().catch(() => {
-            setErrors({ form: 'Could not load group members.' });
+        loadData().catch(() => {
+            setErrors({ form: 'Could not load data.' });
             setLoading(false);
         });
-    }, [id]);
+    }, [id, expenseId]);
 
     async function handleSubmit(event) {
         event.preventDefault();
 
-        const found = validate({ amount, description, paidByUserId, expenseDate, participantUserIds });
-        if (Object.keys(found).length > 0) {
-            setErrors(found);
+        if (participantUserIds.length === 0) {
+            setErrors({ participantUserIds: 'At least one participant must be selected.' });
             return;
         }
 
-        setSubmitting(true);
-        setErrors({});
+        const result = await updateExpense(id, expenseId, {
+            amount,
+            description,
+            paidByUserId: Number(paidByUserId),
+            expenseDate,
+            participantUserIds: participantUserIds.map(Number)
+        });
 
-        try {
-            const result = await createExpense(id, {
-                amount,
-                description,
-                paidByUserId: Number(paidByUserId),
-                expenseDate,
-                participantUserIds: participantUserIds.map(Number)
-            });
-
-            if (result.errors) {
-                setErrors(result.errors);
-                return;
-            }
-
-            navigate(`/groups/${id}`);          // AC7: back to the list the expense now appears in
-        } catch {
-            setErrors({ form: 'Could not add this expense. Please try again.' });
-        } finally {
-            setSubmitting(false);
+        if (result.errors) {
+            setErrors(result.errors);
+            return;
         }
+
+        navigate(`/groups/${id}`);
     }
 
     if (loading) {
-        return <div className="page"><p>Loading…</p></div>;
+        return <p>Loading...</p>;
     }
 
     return (
         <div className="page">
             <div className="card">
-                <h1>Add an expense</h1>
-                <p className="subtitle">Split equally among selected members</p>
-
+                <h2>Edit Expense</h2>
+                <p className="subtitle">Edit the details of this expense</p>
                 <form onSubmit={handleSubmit} noValidate>
                     <div className="form-group">
                         <label htmlFor="amount">Amount</label>
@@ -125,7 +93,6 @@ function AddExpense() {
                             type="number"
                             step="0.01"
                             value={amount}
-                            placeholder="0.00"
                             onChange={(event) => setAmount(event.target.value)}
                         />
                         {errors.amount && <span className="error">{errors.amount}</span>}
@@ -137,7 +104,6 @@ function AddExpense() {
                             id="description"
                             type="text"
                             value={description}
-                            placeholder="What was it for?"
                             onChange={(event) => setDescription(event.target.value)}
                         />
                         {errors.description && <span className="error">{errors.description}</span>}
@@ -158,18 +124,6 @@ function AddExpense() {
                             ))}
                         </select>
                         {errors.paidByUserId && <span className="error">{errors.paidByUserId}</span>}
-                    </div>
-
-                    <div className="form-group">
-                        <label htmlFor="expenseDate">Date</label>
-                        <input
-                            id="expenseDate"
-                            type="date"
-                            value={expenseDate}
-                            max={today()}                 // AC6: past dates only
-                            onChange={(event) => setExpenseDate(event.target.value)}
-                        />
-                        {errors.expenseDate && <span className="error">{errors.expenseDate}</span>}
                     </div>
 
                     <div className="select-participants"> {/* #8 AC3: split among a subset of the group */}
@@ -212,4 +166,4 @@ function AddExpense() {
     );
 }
 
-export default AddExpense;
+export default EditExpense;

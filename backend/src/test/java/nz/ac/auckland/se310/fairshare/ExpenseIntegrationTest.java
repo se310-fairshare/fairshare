@@ -11,6 +11,7 @@ import nz.ac.auckland.se310.fairshare.exception.InvalidPayerException;
 import nz.ac.auckland.se310.fairshare.model.User;
 import nz.ac.auckland.se310.fairshare.repository.ExpenseGroupRepository;
 import nz.ac.auckland.se310.fairshare.repository.ExpenseRepository;
+import nz.ac.auckland.se310.fairshare.repository.ExpenseShareRepository;
 import nz.ac.auckland.se310.fairshare.service.ExpenseGroupService;
 import nz.ac.auckland.se310.fairshare.service.ExpenseService;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,6 +55,7 @@ class ExpenseIntegrationTest {
     @Autowired ExpenseService expenseService;
     @Autowired ExpenseGroupRepository groupRepository;
     @Autowired ExpenseRepository expenseRepository;
+    @Autowired ExpenseShareRepository expenseShareRepository;
     @Autowired UserRepository userRepository;
     @Autowired Validator validator;
 
@@ -61,9 +63,11 @@ class ExpenseIntegrationTest {
     private Long bobId;
     private Long carolId;
     private Long groupId;
+    private List<Long> memberIds;
 
     @BeforeEach
     void setUp() {
+        expenseShareRepository.deleteAll();
         expenseRepository.deleteAll();
         groupRepository.deleteAll();
 
@@ -73,6 +77,7 @@ class ExpenseIntegrationTest {
                 .orElseGet(() -> userRepository.save(new User(
                         "carol", "x", CAROL_EMAIL, User.Country.NEW_ZEALAND, User.Currency.NZD)))
                 .getId();
+        memberIds = List.of(aliceId, bobId, carolId);
 
         groupId = groupService.createGroup(new CreateGroupRequest("Flat 3", null), aliceId).id();
         groupService.addMember(groupId, "bob@test.com", aliceId);
@@ -81,7 +86,7 @@ class ExpenseIntegrationTest {
     @Test
     void ac1_createsExpenseWithGivenDetails() {
         var request = new CreateExpenseRequest(
-                new BigDecimal(GROCERIES_AMOUNT), GROCERIES, bobId, LocalDate.of(2026, Month.AUGUST, 1));
+                new BigDecimal(GROCERIES_AMOUNT), GROCERIES, bobId, memberIds, LocalDate.of(2026, Month.AUGUST, 1));
 
         ExpenseResponse created = expenseService.createExpense(groupId, request, aliceId);
 
@@ -96,8 +101,8 @@ class ExpenseIntegrationTest {
     }
 
     @Test
-    void ac1_balancesReflectTheNewExpense() {
-        var request = new CreateExpenseRequest(new BigDecimal(GROCERIES_AMOUNT), GROCERIES, bobId, null);
+    void ac1_balancesReflectTheNewExpense() { // Also tests #8 AC4 & AC5
+        var request = new CreateExpenseRequest(new BigDecimal(GROCERIES_AMOUNT), GROCERIES, bobId, memberIds, null);
 
         expenseService.createExpense(groupId, request, aliceId);
 
@@ -108,30 +113,30 @@ class ExpenseIntegrationTest {
 
     @Test
     void ac2AndAc3_rejectsMissingFieldsAndNonPositiveAmounts() {
-        assertThat(violations(new CreateExpenseRequest(null, "  ", null, null)))
+        assertThat(violations(new CreateExpenseRequest(null, "  ", null, memberIds, null)))
                 .containsOnlyKeys(AMOUNT_FIELD, "description", "paidByUserId");
 
-        assertThat(violations(new CreateExpenseRequest(BigDecimal.ZERO, "Taxi", aliceId, null)))
+        assertThat(violations(new CreateExpenseRequest(BigDecimal.ZERO, "Taxi", aliceId, memberIds, null)))
                 .extractingByKey(AMOUNT_FIELD, list(String.class))
                 .contains("Amount must be a positive number");
 
-        assertThat(violations(new CreateExpenseRequest(new BigDecimal("-5.00"), "Taxi", aliceId, null)))
+        assertThat(violations(new CreateExpenseRequest(new BigDecimal("-5.00"), "Taxi", aliceId, memberIds, null)))
                 .extractingByKey(AMOUNT_FIELD, list(String.class))
                 .contains("Amount must be a positive number");
     }
 
     @Test
     void ac3_rejectsAmountsSmallerThanOneCent() {
-        assertThat(violations(new CreateExpenseRequest(new BigDecimal("0.004"), "Taxi", aliceId, null)))
+        assertThat(violations(new CreateExpenseRequest(new BigDecimal("0.004"), "Taxi", aliceId, memberIds, null)))
                 .extractingByKey(AMOUNT_FIELD, list(String.class))
                 .containsExactly("Amount must be at least 0.01");
     }
 
     @Test
-    void ac4_splitsEquallyAcrossAllCurrentMembers() {
+    void ac4_splitsEquallyAcrossAllCurrentMembers() { // Also tests #8 AC1
         groupService.addMember(groupId, CAROL_EMAIL, aliceId);
 
-        var request = new CreateExpenseRequest(new BigDecimal("90.00"), "Power bill", aliceId, null);
+        var request = new CreateExpenseRequest(new BigDecimal("90.00"), "Power bill", aliceId, memberIds, null);
 
         expenseService.createExpense(groupId, request, aliceId);
 
@@ -142,10 +147,10 @@ class ExpenseIntegrationTest {
     }
 
     @Test
-    void ac4_unevenSplitStillSumsToTheAmount() {
+    void ac4_unevenSplitStillSumsToTheAmount() { // Also tests #8 AC2
         groupService.addMember(groupId, CAROL_EMAIL, aliceId);
 
-        var request = new CreateExpenseRequest(new BigDecimal("100.00"), "Internet", aliceId, null);
+        var request = new CreateExpenseRequest(new BigDecimal("100.00"), "Internet", aliceId, memberIds, null);
 
         expenseService.createExpense(groupId, request, aliceId);
 
@@ -160,7 +165,7 @@ class ExpenseIntegrationTest {
 
     @Test
     void ac5_payerMustBeAGroupMember() {
-        var request = new CreateExpenseRequest(new BigDecimal(TAXI_AMOUNT), "Taxi", carolId, null);
+        var request = new CreateExpenseRequest(new BigDecimal(TAXI_AMOUNT), "Taxi", carolId, memberIds, null);
 
         assertThatThrownBy(() -> expenseService.createExpense(groupId, request, aliceId))
                 .isInstanceOf(InvalidPayerException.class);
@@ -168,7 +173,7 @@ class ExpenseIntegrationTest {
 
     @Test
     void ac6_expenseDateDefaultsToTodayWhenOmitted() {
-        var request = new CreateExpenseRequest(new BigDecimal(TAXI_AMOUNT), "Taxi", aliceId, null);
+        var request = new CreateExpenseRequest(new BigDecimal(TAXI_AMOUNT), "Taxi", aliceId, memberIds, null);
 
         ExpenseResponse created = expenseService.createExpense(groupId, request, aliceId);
 
@@ -178,21 +183,21 @@ class ExpenseIntegrationTest {
     @Test
     void ac6_rejectsAFutureDateAndAcceptsAPastOne() {
         assertThat(violations(new CreateExpenseRequest(
-                new BigDecimal(TAXI_AMOUNT), "Taxi", aliceId, LocalDate.now().plusDays(1))))
+                new BigDecimal(TAXI_AMOUNT), "Taxi", aliceId, memberIds, LocalDate.now().plusDays(1))))
                 .extractingByKey("expenseDate", list(String.class))
                 .containsExactly("Expense date cannot be in the future");
 
         assertThat(violations(new CreateExpenseRequest(
-                new BigDecimal(TAXI_AMOUNT), "Taxi", aliceId, LocalDate.now().minusDays(30))))
+                new BigDecimal(TAXI_AMOUNT), "Taxi", aliceId, memberIds, LocalDate.now().minusDays(30))))
                 .isEmpty();
     }
 
     @Test
     void ac7_listsGroupExpensesForEveryMemberNewestFirst() {
         expenseService.createExpense(groupId, new CreateExpenseRequest(
-                new BigDecimal(TAXI_AMOUNT), "Taxi", aliceId, LocalDate.now().minusDays(3)), aliceId);
+                new BigDecimal(TAXI_AMOUNT), "Taxi", aliceId, memberIds, LocalDate.now().minusDays(3)), aliceId);
         expenseService.createExpense(groupId, new CreateExpenseRequest(
-                new BigDecimal("20.00"), "Pizza", bobId, LocalDate.now().minusDays(1)), aliceId);
+                new BigDecimal("20.00"), "Pizza", bobId, memberIds, LocalDate.now().minusDays(1)), aliceId);
 
         List<ExpenseResponse> expenses = expenseService.getExpensesForGroup(groupId, bobId);
 
@@ -206,12 +211,65 @@ class ExpenseIntegrationTest {
 
     @Test
     void ac8_nonMemberCannotCreateOrViewExpenses() {
-        var request = new CreateExpenseRequest(new BigDecimal(TAXI_AMOUNT), "Taxi", aliceId, null);
+        var request = new CreateExpenseRequest(new BigDecimal(TAXI_AMOUNT), "Taxi", aliceId, memberIds, null);
 
         assertThatThrownBy(() -> expenseService.createExpense(groupId, request, carolId))
                 .isInstanceOf(GroupAccessDeniedException.class);
         assertThatThrownBy(() -> expenseService.getExpensesForGroup(groupId, carolId))
                 .isInstanceOf(GroupAccessDeniedException.class);
+    }
+
+    // Issue #8 tests:
+
+    @Test
+    void ac3_splitsAcrossASubsetOfMembers() {
+        groupService.addMember(groupId, CAROL_EMAIL, aliceId);
+
+        var request = new CreateExpenseRequest(new BigDecimal("90.00"), "Power bill", aliceId, List.of(aliceId, carolId), null);
+
+        expenseService.createExpense(groupId, request, aliceId);
+
+        assertThat(balances()).containsOnly(
+                Map.entry(aliceId, new BigDecimal("45.00")),
+                Map.entry(bobId, new BigDecimal("0.00")),
+                Map.entry(carolId, new BigDecimal("-45.00")));
+    }
+
+    @Test
+    void ac6_atLeastOneMemberMustBeIncludedInTheSplit() {
+        var request = new CreateExpenseRequest(new BigDecimal(TAXI_AMOUNT), "Taxi", aliceId, List.of(), null);
+
+        assertThat(violations(request))
+                .extractingByKey("participantUserIds", list(String.class))
+                .containsExactly("At least one participant is required");
+    }
+
+    @Test
+    void ac7_editingAnExpenseUpdatesTheBalances() {
+        var request = new CreateExpenseRequest(new BigDecimal(GROCERIES_AMOUNT), GROCERIES, bobId, memberIds, null);
+        ExpenseResponse created = expenseService.createExpense(groupId, request, aliceId);
+
+        var updateRequest = new CreateExpenseRequest(new BigDecimal("50.00"), "Groceries and snacks", bobId, memberIds, null);
+        expenseService.updateExpense(groupId, updateRequest, aliceId, created.id());
+
+        assertThat(balances()).containsOnly(
+                Map.entry(bobId, new BigDecimal("25.00")),
+                Map.entry(aliceId, new BigDecimal("-25.00")));
+    }
+
+    @Test 
+    void ac7_removingAParticipantFromAnExpenseUpdatesTheBalances() {
+        groupService.addMember(groupId, CAROL_EMAIL, aliceId);
+        var request = new CreateExpenseRequest(new BigDecimal("90.00"), "Power bill", aliceId, List.of(aliceId, bobId, carolId), null);
+        ExpenseResponse created = expenseService.createExpense(groupId, request, aliceId);
+
+        var updateRequest = new CreateExpenseRequest(new BigDecimal("90.00"), "Power bill", aliceId, List.of(aliceId, bobId), null);
+        expenseService.updateExpense(groupId, updateRequest, aliceId, created.id());
+
+        assertThat(balances()).containsOnly(
+                Map.entry(aliceId, new BigDecimal("45.00")),
+                Map.entry(bobId, new BigDecimal("-45.00")),
+                Map.entry(carolId, new BigDecimal("0.00")));
     }
 
     private Map<Long, BigDecimal> balances() {

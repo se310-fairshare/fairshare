@@ -20,7 +20,7 @@ public class Expense {
     private ExpenseGroup group;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "paid_by", nullable = false, updatable = false)
+    @JoinColumn(name = "paid_by", nullable = false)
     private User paidBy;
 
     @Column(name = "amount", nullable = false, precision = 10, scale = 2)
@@ -49,8 +49,11 @@ public class Expense {
     public Long getId() { return id; }
     public ExpenseGroup getGroup() { return group; }
     public User getPaidBy() { return paidBy; }
+    public void setPaidBy(User paidBy) { this.paidBy = paidBy; }
     public BigDecimal getAmount() { return amount; }
+    public void setAmount(BigDecimal amount) { this.amount = amount; }
     public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
     public LocalDate getExpenseDate() { return expenseDate; }
     public Instant getCreatedAt() { return createdAt; }
 

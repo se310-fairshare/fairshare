@@ -101,13 +101,15 @@ function GroupPage() {
                     <h2>Expenses</h2>
                     <Link className="action" to={`/groups/${id}/expenses/new`}>Add an expense</Link>
 
-                    {/* AC7: every member sees the expense with amount, description, payer and date */}
+                    {/* AC7: every member sees the expense with amount, description, payer and date */} 
+                    {/* #8 AC7: Expenses can be edited */}
                     {expenses.length === 0 ? (
                         <p className="empty">No expenses yet.</p>
                     ) : (
                         <ul className="expense-list">
                             {expenses.map((expense) => (
                                 <li key={expense.id}>
+                                    <Link className="action" to={`/groups/${id}/expenses/${expense.id}/edit`}>Edit</Link>
                                     <span className="expense-description">{expense.description}</span>
                                     <span className="expense-meta">
                                         {expense.paidByUsername} paid on {expense.expenseDate}

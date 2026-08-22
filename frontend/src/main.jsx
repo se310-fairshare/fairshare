@@ -13,6 +13,7 @@ import UserManagement from './pages/UserManagement.jsx';
 import './index.css';
 import App from './App.jsx';
 import {getCurrentUser} from "./api/users.js";
+import EditExpense from './pages/ManageExpense.jsx';
 
 /** Sends visitors without a session to the login page before the route renders. */
 async function requireAuth() {
@@ -68,6 +69,11 @@ const router = createBrowserRouter([
             {
                 path: '/groups/:id/expenses/new',
                 element: <AddExpense/>,
+                loader: requireAuth
+            },
+            {
+                path: '/groups/:id/expenses/:expenseId/edit',
+                element: <EditExpense/>,
                 loader: requireAuth
             }
         ]
