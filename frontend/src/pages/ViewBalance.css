@@ -33,19 +33,10 @@
     font-weight: 400;
 }
 
-.balance-Positive {
-    color: #0bba31;
-    font-size: 13px;
-}
-
-.balance-Negative {
-    color: #e74c3c;
-    font-size: 13px;
-}
 
 .balance-Neutral {
     color: #666;
-    font-size: 13px;
+    font-size: 15px;
 }
 
 @media (max-width: 520px) {

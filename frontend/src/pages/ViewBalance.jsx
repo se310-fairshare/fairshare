@@ -76,7 +76,7 @@ function ViewBalance() {
         );
     }
 
-    const settled = members.every((member) => Number(member.netBalance)==0);
+    
     
 
     return (
@@ -84,14 +84,11 @@ function ViewBalance() {
             <div className="card balance-card">
                 <h1>Balances</h1>
                 <p className="subtitle">{group.name}</p>
-
-                {settled ? (
-                    <p className="empty">Everyone is settled up.</p>
-                ) : (
+                
                     <ul className="detailed-balance-list">
                         
                         {members.map((member) => (
-                            <li key={member.userId} className="balance">
+                            <li key={member.userId} className="balance-row">
                                     <Link to={`/groups/${id}/balance/${member.userId}`}>{member.username} </Link> 
                                     <div className = {balanceClass(member)}>{balanceLine(member, group.baseCurrency)}</div>
                                 </li>
@@ -101,7 +98,7 @@ function ViewBalance() {
                         
                         
                     </ul>
-                )}
+                
 
                 <Link to={`/groups/${id}`}>Back to group</Link>
             </div>
