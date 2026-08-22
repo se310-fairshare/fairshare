@@ -88,7 +88,7 @@ function ViewBalance() {
                     <ul className="detailed-balance-list">
                         
                         {members.map((member) => (
-                            <li key={member.userId} className="balance-row">
+                            <li key={member.userId} className="balance">
                                     <Link to={`/groups/${id}/balance/${member.userId}`}>{member.username} </Link> 
                                     <div className = {balanceClass(member)}>{balanceLine(member, group.baseCurrency)}</div>
                                 </li>
