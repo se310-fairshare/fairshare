@@ -20,6 +20,8 @@
     <properties>
         <java.version>21</java.version>
         <jackson-bom.version>3.1.5</jackson-bom.version>
+        <!-- Aligns all embedded Tomcat modules on a release containing the security fixes tracked in #30. -->
+        <tomcat.version>11.0.24</tomcat.version>
         <!-- Overrides the Boot-managed 1.5.34, which is affected by CVE-2026-13006. -->
         <logback.version>1.5.36</logback.version>
     </properties>
