@@ -32,8 +32,24 @@ public class ExpenseController {
                 .body(created);
     }
 
+    @PutMapping("/{expenseId}")
+    public ResponseEntity<Void> update(@PathVariable Long groupId,
+                                       @PathVariable Long expenseId,
+                                       @Valid @RequestBody CreateExpenseRequest request) {
+        expenseService.updateExpense(groupId, request, currentUser.currentUserId(), expenseId);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping
     public List<ExpenseResponse> list(@PathVariable Long groupId) {
         return expenseService.getExpensesForGroup(groupId, currentUser.currentUserId());
+    }
+
+    @GetMapping("/{expenseId}")
+    public ResponseEntity<ExpenseResponse> get(
+            @PathVariable Long groupId,
+            @PathVariable Long expenseId) {
+        return ResponseEntity.ok(
+                expenseService.getExpense(groupId, expenseId, currentUser.currentUserId()));
     }
 }

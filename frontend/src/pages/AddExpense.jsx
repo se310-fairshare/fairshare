@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { getGroupMembers } from '../api/groups';
 import { createExpense } from '../api/expenses';
+import ExpenseForm from '../components/ExpenseForm';
 import './AddExpense.css';
 
 // Built from local date because toISOString() reports the UTC date and
@@ -13,7 +14,7 @@ function today() {
     return `${now.getFullYear()}-${month}-${day}`;
 }
 
-function validate({ amount, description, paidByUserId, expenseDate }) {
+function validate({ amount, description, paidByUserId, expenseDate, participantUserIds }) {
     const errors = {};
 
     if (amount.trim() === '') {
@@ -34,6 +35,10 @@ function validate({ amount, description, paidByUserId, expenseDate }) {
         errors.expenseDate = 'Expense date cannot be in the future';   // AC6
     }
 
+    if (!participantUserIds || participantUserIds.length === 0) {
+        errors.participantUserIds = 'At least one participant is required';   // AC4
+    }
+
     return errors;
 }
 
@@ -48,6 +53,7 @@ function AddExpense() {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [errors, setErrors] = useState({});
+    const [participantUserIds, setParticipantUserIds] = useState([]);  // #8 AC3
 
     useEffect(() => {
         async function loadMembers() {
@@ -71,7 +77,7 @@ function AddExpense() {
     async function handleSubmit(event) {
         event.preventDefault();
 
-        const found = validate({ amount, description, paidByUserId, expenseDate });
+        const found = validate({ amount, description, paidByUserId, expenseDate, participantUserIds });
         if (Object.keys(found).length > 0) {
             setErrors(found);
             return;
@@ -85,7 +91,8 @@ function AddExpense() {
                 amount,
                 description,
                 paidByUserId: Number(paidByUserId),
-                expenseDate
+                expenseDate,
+                participantUserIds: participantUserIds.map(Number)
             });
 
             if (result.errors) {
@@ -109,69 +116,25 @@ function AddExpense() {
         <div className="page">
             <div className="card">
                 <h1>Add an expense</h1>
-                <p className="subtitle">Split equally among everyone in the group</p>
+                <p className="subtitle">Split equally among selected members</p>
 
-                <form onSubmit={handleSubmit} noValidate>
-                    <div className="form-group">
-                        <label htmlFor="amount">Amount</label>
-                        <input
-                            id="amount"
-                            type="number"
-                            step="0.01"
-                            value={amount}
-                            placeholder="0.00"
-                            onChange={(event) => setAmount(event.target.value)}
-                        />
-                        {errors.amount && <span className="error">{errors.amount}</span>}
-                    </div>
-
-                    <div className="form-group">
-                        <label htmlFor="description">Description</label>
-                        <input
-                            id="description"
-                            type="text"
-                            value={description}
-                            placeholder="What was it for?"
-                            onChange={(event) => setDescription(event.target.value)}
-                        />
-                        {errors.description && <span className="error">{errors.description}</span>}
-                    </div>
-
-                    <div className="form-group">
-                        <label htmlFor="paidByUserId">Paid by</label>
-                        <select
-                            id="paidByUserId"
-                            value={paidByUserId}
-                            onChange={(event) => setPaidByUserId(event.target.value)}
-                        >
-                            {/* AC5: only current members of the group */}
-                            {members.map((member) => (
-                                <option key={member.userId} value={member.userId}>
-                                    {member.username}
-                                </option>
-                            ))}
-                        </select>
-                        {errors.paidByUserId && <span className="error">{errors.paidByUserId}</span>}
-                    </div>
-
-                    <div className="form-group">
-                        <label htmlFor="expenseDate">Date</label>
-                        <input
-                            id="expenseDate"
-                            type="date"
-                            value={expenseDate}
-                            max={today()}                 // AC6: past dates only
-                            onChange={(event) => setExpenseDate(event.target.value)}
-                        />
-                        {errors.expenseDate && <span className="error">{errors.expenseDate}</span>}
-                    </div>
-
-                    {errors.form && <span className="error">{errors.form}</span>}
-
-                    <button type="submit" disabled={submitting}>
-                        {submitting ? 'Saving…' : 'Save expense'}
-                    </button>
-                </form>
+                <ExpenseForm
+                    amount={amount}
+                    description={description}
+                    paidByUserId={paidByUserId}
+                    expenseDate={expenseDate}
+                    participantUserIds={participantUserIds}
+                    members={members}
+                    errors={errors}
+                    submitting={submitting}
+                    onAmountChange={setAmount}
+                    onDescriptionChange={setDescription}
+                    onPaidByUserIdChange={setPaidByUserId}
+                    onExpenseDateChange={setExpenseDate}
+                    onParticipantUserIdsChange={setParticipantUserIds}
+                    onSubmit={handleSubmit}
+                    maxExpenseDate={today()}
+                />
 
                 <Link to={`/groups/${id}`}>Back to the group</Link>
             </div>

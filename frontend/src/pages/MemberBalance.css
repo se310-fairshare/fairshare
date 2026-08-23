@@ -1,14 +1,21 @@
-.group-card h2 {
+.balance-card h2 {
     margin: 30px 0 10px;
     font-size: 18px;
     border-bottom: 1px solid #eee;
     padding-bottom: 6px;
 }
 
-.balance {
-    color: #333;
-    
+.balance-Positive {
+    color: #0bba31;
+    font-size: 20px;
 }
+
+.balance-Negative {
+    color: #e74c3c;
+    font-size: 20px;
+}
+
+
 .expense-list,
 .balance-list {
     list-style: none;
@@ -32,6 +39,8 @@
     grid-row: 1 / span 2;
     grid-column: 2;
     align-self: center;
+    
+
 }
 
 .expense-meta {

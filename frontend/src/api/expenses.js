@@ -32,3 +32,35 @@ export async function createExpense(id, expense) {
     }
     return { expense: await response.json() };
 }
+
+export async function updateExpense(id, expenseId, expense) {
+    const groupId = requirePositiveInteger(id, 'Group ID');
+    const response = await fetch(`${API_BASE}/groups/${groupId}/expenses/${expenseId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(expense)
+    });
+    if (response.status === 400) {
+        const body = await response.json();
+        return { errors: body.error ? { form: body.error } : body };
+    }
+    if (!response.ok) {
+        return { errors: { form: await readError(response, 'Could not update this expense.') } };
+    }
+    return {};
+}
+
+export async function getExpense(id, expenseId) {
+    const groupId = requirePositiveInteger(id, 'Group ID');
+    const response = await fetch(
+        `${API_BASE}/groups/${groupId}/expenses/${expenseId}`,
+        { credentials: 'include' }
+    );
+
+    if (!response.ok) {
+        return { error: await readError(response, 'Could not load expense.') };
+    }
+
+    return { expense: await response.json() };
+}

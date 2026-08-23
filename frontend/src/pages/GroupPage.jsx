@@ -95,17 +95,21 @@ function GroupPage() {
                 <h1>{group.name}</h1>
                 {group.description && <p className="subtitle">{group.description}</p>}
 
+                <Link to={`/groups/${id}/members`}>Manage members</Link>
+
                 <section>
                     <h2>Expenses</h2>
                     <Link className="action" to={`/groups/${id}/expenses/new`}>Add an expense</Link>
 
-                    {/* AC7: every member sees the expense with amount, description, payer and date */}
+                    {/* AC7: every member sees the expense with amount, description, payer and date */} 
+                    {/* #8 AC7: Expenses can be edited */}
                     {expenses.length === 0 ? (
                         <p className="empty">No expenses yet.</p>
                     ) : (
                         <ul className="expense-list">
                             {expenses.map((expense) => (
                                 <li key={expense.id}>
+                                    <Link className="action" to={`/groups/${id}/expenses/${expense.id}/edit`}>Edit</Link>
                                     <span className="expense-description">{expense.description}</span>
                                     <span className="expense-meta">
                                         {expense.paidByUsername} paid on {expense.expenseDate}
@@ -125,6 +129,9 @@ function GroupPage() {
                     {settled ? (
                         <p className="balance">
                             Everyone is settled up. Balance: {money(group.baseCurrency, 0)}
+                            <br />
+                            
+                            
                         </p>
                     ) : (
                         <ul className="balance-list">
@@ -133,8 +140,11 @@ function GroupPage() {
                                     {balanceLine(member, group.baseCurrency)}
                                 </li>
                             ))}
+                            
                         </ul>
                     )}
+                    <Link to={`/groups/${id}/balance`}>View Detailed</Link>
+                    
                 </section>
 
                 <section>
