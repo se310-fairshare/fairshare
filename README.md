@@ -207,7 +207,7 @@ FairShare is released under the MIT License. See [LICENSE](LICENSE) for the full
 
 The project is reached through GitHub. Questions about a specific issue or pull request belong in a comment on that issue or pull request.
 
-To report a Code of Conduct violation or private concerns, contact any member of the team directly rather than opening a public issue.
+To report a Code of Conduct violation or private concerns, contact us through email at [jhua455@aucklanduni.ac.nz](mailto:jhua455@aucklanduni.ac.nz).
 
 ## Acknowledgements
 
