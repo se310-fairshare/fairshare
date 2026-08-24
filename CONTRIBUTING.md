@@ -111,7 +111,7 @@ cd backend
 ./mvnw spring-boot:run
 ```
 
-A request to `/` returns 404 unless a root route has been implemented.
+There is no root route, so a request to `/` returns 401 without a session and 404 with one. Either response means the backend has started.
 
 Frontend, served on port 5173:
 
