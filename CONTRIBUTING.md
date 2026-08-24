@@ -111,7 +111,7 @@ cd backend
 ./mvnw spring-boot:run
 ```
 
-A request to `/` returns 404 unless a root route has been implemented.
+There is no root route, so a request to `/` returns 401 without a session and 404 with one. Either response means the backend has started.
 
 Frontend, served on port 5173:
 
@@ -229,7 +229,7 @@ JavaScript and JSX use two-space indentation.
 Outside contributors reach the project through GitHub.
 Questions about a specific issue or pull request belong in a comment on that issue or pull request.
 General questions are raised as a new issue with the `question` label.
-The project does not provide support by email or private message.
+The project provides support via the email listed in README.
 
 The team itself also uses Discord for general coordination and status updates, alongside the weekly meeting.
 Anything decided there about a specific issue, pull request or commit is copied into a comment on that item, stating that it records a Discord or meeting discussion, so the reasoning stays attached to the work.
