@@ -54,11 +54,7 @@ The wiki has step by step install guides for MySQL and Docker on [macOS](https:/
 
 ### 1. Create the database
 
-Flyway creates every table on first run, but it does not create the database itself. Create an empty one first:
-
-```sql
-CREATE DATABASE fairshare;
-```
+Follow the setup page for your platform, [macOS](https://github.com/se310-fairshare/fairshare/wiki/macOS-Setup-MySQL-and-Docker) or [Windows](https://github.com/se310-fairshare/fairshare/wiki/Windows-Setup-MySQL-and-Docker).
 
 ### 2. Configure the backend
 
