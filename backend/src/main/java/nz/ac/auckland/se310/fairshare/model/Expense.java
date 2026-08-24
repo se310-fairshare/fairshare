@@ -37,6 +37,10 @@ public class Expense {
 
     protected Expense() {} // JPA
 
+    /**
+     * Represents one recorded purchase within a group. The payer and amount are stored so the
+     * system can reconstruct each member's net balance from the expense history.
+     */
     public Expense(ExpenseGroup group, User paidBy, BigDecimal amount, String description, LocalDate expenseDate) {
         this.group = group;
         this.paidBy = paidBy;

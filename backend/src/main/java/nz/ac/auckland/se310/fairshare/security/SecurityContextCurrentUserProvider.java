@@ -11,6 +11,7 @@ public class SecurityContextCurrentUserProvider implements CurrentUserProvider {
     public Long currentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
+        // The security principal carries the authenticated user ID from the JWT/session context.
         if (authentication == null
                 || !authentication.isAuthenticated()
                 || !(authentication.getPrincipal() instanceof FairShareUserDetails principal)) {

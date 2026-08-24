@@ -9,6 +9,7 @@ export default function SettlementView({ groupId, baseCurrency }) {
     const [error, setError] = useState(null);
     const [paying, setPaying] = useState(null);
 
+    // Fetches the latest member balances and regenerates the settlement plan when the group changes.
     async function loadBalances() {
         try {
             setLoading(true);
@@ -40,6 +41,7 @@ export default function SettlementView({ groupId, baseCurrency }) {
         loadBalances();
     }, [groupId]);
 
+    // Recomputes the settlement plan using the current balances without reloading unrelated page data.
     async function onCompute() {
         try {
             setLoading(true);
@@ -53,6 +55,7 @@ export default function SettlementView({ groupId, baseCurrency }) {
         }
     }
 
+    // Marks a pending transfer as complete and then refreshes the balances so the UI reflects payment status.
     async function onMarkPaid(fromUserId, toUserId) {
         try {
             setPaying(`${fromUserId}-${toUserId}`);
@@ -71,6 +74,7 @@ export default function SettlementView({ groupId, baseCurrency }) {
 
     if (!balances) return <p>Loading balances…</p>;
 
+    // Resolve display names once so each settlement row can render a readable payer/recipient label.
     const memberLookup = new Map(members.map(member => [member.userId, member.username]));
 
     return (

@@ -68,6 +68,7 @@ public class ExpenseGroupController {
             @PathVariable Long id,
             @PathVariable Long fromUserId,
             @PathVariable Long toUserId) {
+        // This marks a pending settlement as completed from the perspective of the current user.
         groupService.markSettlementPaid(id, fromUserId, toUserId, currentUser.currentUserId());
         return ResponseEntity.noContent().build();
     }

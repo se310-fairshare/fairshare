@@ -37,6 +37,10 @@ public class ExpenseService {
         this.expenseShareRepository = expenseShareRepository;
     }
 
+    /**
+     * Validates that the current user belongs to the group, confirms the payer is a member, and then
+     * saves the expense and its equal-share breakdown for the selected participants.
+     */
     @Transactional
     public ExpenseResponse createExpense(Long groupId, CreateExpenseRequest request, Long currentUserId) {
         ExpenseGroup group = groupRepository.findByIdAndMembersUserId(groupId, currentUserId)
@@ -69,6 +73,10 @@ public class ExpenseService {
         return toResponse(saved);
     }
 
+    /**
+     * Rewrites an existing expense by removing the old share allocation, applying the new payer and
+     * participant list, and persisting the updated amount and metadata on the original expense.
+     */
     @Transactional
     public void updateExpense(Long groupId, CreateExpenseRequest request, Long currentUserId, Long expenseId) {
         ExpenseGroup group = groupRepository.findByIdAndMembersUserId(groupId, currentUserId)
@@ -83,6 +91,7 @@ public class ExpenseService {
             throw new InvalidPayerException(request.paidByUserId());
         }
 
+        // Rebuild the participant list from the current group membership so edits cannot use stale or invalid users.
         List<UserInGroup> members = request.participantUserIds().stream()
                 .distinct() // duplicate IDs must not be counted more than once in the split
                 .map(group::getMember)

@@ -40,6 +40,7 @@ public class ExpenseGroup {
 
     protected ExpenseGroup() {} // JPA
 
+    // A group is the container for all members, shared expenses, and any settlement activity.
     public ExpenseGroup(String groupName, String description, User.Currency baseCurrency, User createdBy) {
         this.groupName = groupName;
         this.description = description;

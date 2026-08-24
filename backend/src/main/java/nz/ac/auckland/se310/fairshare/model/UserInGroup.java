@@ -40,6 +40,10 @@ public class UserInGroup {
     public ExpenseGroup getGroup() { return group; }
     public BigDecimal getNetBalance() { return netBalance; }
 
+    /**
+     * A member is still active in the group if their net balance is non-zero, as they must settle
+     * any outstanding amount before leaving.
+     */
     public boolean hasOutstandingBalance() {
         return netBalance.compareTo(BigDecimal.ZERO) != 0;
     }

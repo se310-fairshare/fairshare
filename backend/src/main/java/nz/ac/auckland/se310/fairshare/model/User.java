@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 @Table(name = "users")
 public class User {
 
+  // The app currently supports the country and currency combinations used by this project.
   public enum Country {
     NEW_ZEALAND,
     AUSTRALIA

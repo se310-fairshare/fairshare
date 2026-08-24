@@ -5,10 +5,12 @@ import {getExpenses} from '../api/expenses';
 import SettlementView from './SettlementView';
 import './GroupPage.css';
 
+// Formats a numeric balance into the UI's currency display and keeps the sign readable.
 function money(currency, value) {
     return `${currency} ${Math.abs(Number(value)).toFixed(2)}`;
 }
 
+// Converts the signed balance into a human-readable sentence about who owes or is owed.
 function balanceLine(member, currency) {
     const balance = Number(member.netBalance);
     if (balance > 0) {
@@ -28,6 +30,7 @@ function GroupPage() {
     const [error, setError] = useState(null);
     const [notFound, setNotFound] = useState(false);
 
+    // Fetch the group, expenses, and members whenever the route changes so the page stays in sync.
     useEffect(() => {
         async function load() {
             try {
@@ -87,6 +90,7 @@ function GroupPage() {
         );
     }
 
+    // A group is fully settled only when every member's net balance is zero.
     const settled = members.every((member) => Number(member.netBalance) === 0);
 
     return (

@@ -16,8 +16,10 @@ function EditExpense() {
     const [description, setDescription] = useState('');
     const [paidByUserId, setPaidByUserId] = useState('');
     const [expenseDate, setExpenseDate] = useState('');
+    // Form controls use strings for values, but the API expects numbers when we submit the final payload.
     const [participantUserIds, setParticipantUserIds] = useState([]);  // #8 AC3
 
+    // Populate the edit form from the selected expense and the current group membership.
     useEffect(() => {
         async function loadData() {
             const [membersResult, expenseResult] = await Promise.all([
@@ -48,6 +50,7 @@ function EditExpense() {
         });
     }, [id, expenseId]);
 
+    // Validates the selected participants before sending the updated expense to the backend.
     async function handleSubmit(event) {
         event.preventDefault();
 

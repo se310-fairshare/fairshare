@@ -60,6 +60,7 @@ public class ExpenseGroupService {
         return toResponse(groupRepository.save(group));
     }
 
+    // Returns the current user's groups in newest-first order, which matches the usual dashboard flow.
     @Transactional(readOnly = true)
     public List<GroupResponse> getGroupsForUser(Long userId) {
         return groupRepository.findByMembersUserIdOrderByCreatedAtDesc(userId)
@@ -179,8 +180,12 @@ public class ExpenseGroupService {
         groupRepository.save(group);
     }
 
+    /**
+     * Replays the group's historical expenses and past settlements to compute each member's current
+     * net balance without relying on persisted per-member state alone.
+     */
     private Map<Long, BigDecimal> computeEffectiveBalances(Long groupId, ExpenseGroup group, List<ExpenseResponse> groupExpenses) {
-        // Start from the persisted per-member net balance (expenses are already applied)
+        // Start from a zero balance for each member and then replay the group's expense history to derive the live net position.
         Map<Long, BigDecimal> balances = new HashMap<>();
 
         // Reconstruct from supplied expenses (used when computing a settlement plan)
@@ -219,8 +224,8 @@ public class ExpenseGroupService {
             }
         }
 
-        // Apply settlements: open settlements increase debtor and decrease creditor;
-        // historical (paid) settlements cancel previous debts (subtract from payer, add to payee).
+        // Apply settlements on top of the expense totals. Open payments still represent a live debt,
+        // while paid settlements reverse the earlier debt direction to keep the net balances accurate.
         for (Settlement settlement : settlementRepository.findByGroupId(groupId)) {
             if (settlement.getSettlementDate() == null) {
                 continue;
@@ -336,7 +341,7 @@ public class ExpenseGroupService {
             subsetSums[mask] = subsetSums[mask ^ (1 << lastBit)].add(active.get(lastBit).amount);
         }
 
-        // 2. Dynamic programming to find max independent zero-sum subsets
+        // 2. Dynamic programming finds the largest zero-sum groups so the remaining balances can be settled efficiently.
         int[] dp = new int[1 << n];
         int[] parentMask = new int[1 << n];
 

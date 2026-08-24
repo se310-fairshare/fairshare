@@ -20,6 +20,7 @@ public class UserService {
       throw new IllegalArgumentException("Email already in use");
     }
 
+    // Store a one-way hash so the raw password is never kept in the database.
     String hashedPassword = encoder.encode(user.getPassword());
     user.setPassword(hashedPassword);
     user.setEmail(user.getEmail().trim().toLowerCase());
