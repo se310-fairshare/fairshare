@@ -22,14 +22,14 @@ export default function SettlementView({ groupId, baseCurrency }) {
             setBalances(b || []);
             setMembers(memberList);
 
-            if (!b || b.length === 0 || b.every(item => Number(item.balance) === 0)) {
+            if (!b || b.every(item => Number(item.balance) === 0)) {
                 setSettlement([]);
                 return;
             }
 
             const plan = await computeSettlement(groupId, b || []);
             setSettlement(plan || []);
-        } catch (e) {
+        } catch {
             setError('Could not load balances');
         } finally {
             setLoading(false);
@@ -38,7 +38,7 @@ export default function SettlementView({ groupId, baseCurrency }) {
 
     useEffect(() => {
         setSettlement(null);
-        loadBalances();
+        void loadBalances();
     }, [groupId]);
 
     // Recomputes the settlement plan using the current balances without reloading unrelated page data.
@@ -48,7 +48,7 @@ export default function SettlementView({ groupId, baseCurrency }) {
             setError(null);
             const plan = await computeSettlement(groupId, balances || []);
             setSettlement(plan || []);
-        } catch (e) {
+        } catch {
             setError('Failed to compute settlement');
         } finally {
             setLoading(false);
@@ -62,7 +62,7 @@ export default function SettlementView({ groupId, baseCurrency }) {
             setError(null);
             await markSettlementPaid(groupId, fromUserId, toUserId);
             await loadBalances();
-        } catch (e) {
+        } catch {
             setError('Failed to mark settlement as paid');
         } finally {
             setPaying(null);
@@ -79,36 +79,38 @@ export default function SettlementView({ groupId, baseCurrency }) {
 
     return (
         <div>
-            <button onClick={onCompute}>Generate settlement plan</button>
+            <button onClick={() => void onCompute()}>Generate settlement plan</button>
             {settlement && (
                 <div>
                     {settlement.length === 0 ? (
                         <p className="empty">Everyone is settled up.</p>
                     ) : (
                         <ul>
-                            {settlement.map((s, idx) => {
+                            {settlement.map((s) => {
                                 const fromUsername = memberLookup.get(s.fromUserId) || `User ${s.fromUserId}`;
                                 const toUsername = memberLookup.get(s.toUserId) || `User ${s.toUserId}`;
-                                                            const currentMember = members.find(m => m.currentUser);
-                                                            const currentUserId = currentMember ? currentMember.userId : null;
-                                                            const canMark = currentUserId !== null && (currentUserId === s.fromUserId || currentUserId === s.toUserId);
+                                const currentMember = members.find(m => m.currentUser);
+                                const currentUserId = currentMember ? currentMember.userId : null;
+                                const canMark = currentUserId !== null
+                                    && (currentUserId === s.fromUserId || currentUserId === s.toUserId);
+                                const settlementKey = `${s.fromUserId}-${s.toUserId}`;
 
-                                                            return (
-                                                                <li key={idx}>
-                                                                    <span>{`${fromUsername} pays ${toUsername}: ${baseCurrency} ${parseFloat(s.amount).toFixed(2)}`}</span>
-                                                                    {canMark && (
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => onMarkPaid(s.fromUserId, s.toUserId)}
-                                                                            disabled={paying === `${s.fromUserId}-${s.toUserId}`}
-                                                                            style={{ marginLeft: '0.75rem' }}
-                                                                        >
-                                                                            {paying === `${s.fromUserId}-${s.toUserId}` ? 'Marking paid…' : 'Mark as paid'}
-                                                                        </button>
-                                                                    )}
-                                                                </li>
-                                                            );
-                                                        })}
+                                return (
+                                    <li key={settlementKey}>
+                                        <span>{`${fromUsername} pays ${toUsername}: ${baseCurrency} ${Number.parseFloat(s.amount).toFixed(2)}`}</span>
+                                        {canMark && (
+                                            <button
+                                                type="button"
+                                                onClick={() => void onMarkPaid(s.fromUserId, s.toUserId)}
+                                                disabled={paying === settlementKey}
+                                                style={{ marginLeft: '0.75rem' }}
+                                            >
+                                                {paying === settlementKey ? 'Marking paid…' : 'Mark as paid'}
+                                            </button>
+                                        )}
+                                    </li>
+                                );
+                            })}
                         </ul>
                     )}
                 </div>

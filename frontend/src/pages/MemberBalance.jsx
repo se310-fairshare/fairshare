@@ -53,7 +53,7 @@ function MemberBalance() {
             }
         }
 
-        loadMemberBalance();
+        void loadMemberBalance();
     }, [id, memberId]);
 
     if (loading) return <div className="page"><p>Loading balance...</p></div>;

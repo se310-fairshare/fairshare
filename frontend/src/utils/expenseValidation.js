@@ -5,7 +5,7 @@ export function validateSharedExpenseFields({ amount, description, paidByUserId,
 
     if (amount.trim() === '') {
         errors.amount = 'Amount is required';
-    } else if (!(Number(amount) > 0)) {
+    } else if (Number.isNaN(Number(amount)) || Number(amount) <= 0) {
         errors.amount = 'Amount must be a positive number';
     }
 

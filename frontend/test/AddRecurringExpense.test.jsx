@@ -6,7 +6,7 @@ import AddRecurringExpense from '../src/pages/AddRecurringExpense.jsx';
 import { getGroupMembers } from '../src/api/groups';
 import { createRecurringExpense } from '../src/api/recurringExpenses';
 import { today } from '../src/utils/dates';
-import { MEMBERS, expectGroupAccessErrorShown, expectRejectsNonPositiveAmounts, expectShowsPayerRemovedError }
+import { MEMBERS, expectGroupAccessErrorShown, expectRejectsNonPositiveAmount, expectShowsPayerRemovedError }
     from './expenseFormTestHelpers';
 
 vi.mock('../src/api/groups', () => ({
@@ -76,7 +76,7 @@ it('AC5: shows an inline error on each missing field', async () => {
     expect(createRecurringExpense).not.toHaveBeenCalled();
 });
 
-it('AC5: rejects a zero, negative or non-numeric amount', async () => {
+it.each(['0', '-5'])('AC5: rejects a non-positive amount of %s', async (value) => {
     const user = userEvent.setup();
     renderPage();
 
@@ -85,27 +85,34 @@ it('AC5: rejects a zero, negative or non-numeric amount', async () => {
     await user.selectOptions(screen.getByLabelText('Frequency'), 'MONTHLY');
     await user.click(screen.getByRole('checkbox', { name: 'alice' }));
 
-    await expectRejectsNonPositiveAmounts(user, amount, 'Save recurring expense', createRecurringExpense);
+    await expectRejectsNonPositiveAmount(
+        user,
+        amount,
+        value,
+        'Save recurring expense',
+        createRecurringExpense
+    );
 });
 
-it('AC5: rejects amounts with more than two decimal places', async () => {
-    const user = userEvent.setup();
-    renderPage();
+it.each(['10.005', '0.001'])(
+    'AC5: rejects an amount with more than two decimal places: %s',
+    async (value) => {
+        const user = userEvent.setup();
+        renderPage();
 
-    const amount = await screen.findByLabelText('Amount');
-    await user.type(screen.getByLabelText('Description'), 'Rent');
-    await user.selectOptions(screen.getByLabelText('Frequency'), 'MONTHLY');
-    await user.click(screen.getByRole('checkbox', { name: 'alice' }));
+        const amount = await screen.findByLabelText('Amount');
+        await user.type(screen.getByLabelText('Description'), 'Rent');
+        await user.selectOptions(screen.getByLabelText('Frequency'), 'MONTHLY');
+        await user.click(screen.getByRole('checkbox', { name: 'alice' }));
 
-    for (const value of ['10.005', '0.001']) {
         await user.clear(amount);
         await user.type(amount, value);
         await user.click(screen.getByRole('button', { name: 'Save recurring expense' }));
 
         expect(screen.getByText('Amounts should only have up to 2 decimal places.')).toBeInTheDocument();
+        expect(createRecurringExpense).not.toHaveBeenCalled();
     }
-    expect(createRecurringExpense).not.toHaveBeenCalled();
-});
+);
 
 it.each([
     // The number input normalises 10.00 to 10; the backend stores it at two decimal places.

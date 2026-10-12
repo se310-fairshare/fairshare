@@ -33,14 +33,14 @@ function UserManagement() {
         setEmail(user.email || '');
         setCountry(user.country || '');
         setCurrency(user.currency || '');
-      } catch (loadError) {
+      } catch {
         setError('Could not load your profile. Please try again.');
       } finally {
         setLoading(false);
       }
     }
 
-    loadProfile();
+    void loadProfile();
   }, [navigate]);
 
   function handleCountryChange(event) {
@@ -182,7 +182,7 @@ function UserManagement() {
           {message && <div className="success">{message}</div>}
 
           <button type="submit">Save Changes</button>
-          <button type="button" onClick={handleLogout} className="secondary-button">
+          <button type="button" onClick={() => void handleLogout()} className="secondary-button">
             Log Out
           </button>
         </form>

@@ -7,7 +7,7 @@ import { getGroup, getGroupMembers } from '../src/api/groups';
 import { createExpense } from '../src/api/expenses';
 import { getCurrencies } from '../src/api/currencies';
 import { today } from '../src/utils/dates';
-import { MEMBERS, expectGroupAccessErrorShown, expectRejectsNonPositiveAmounts, expectShowsPayerRemovedError }
+import { MEMBERS, expectGroupAccessErrorShown, expectRejectsNonPositiveAmount, expectShowsPayerRemovedError }
     from './expenseFormTestHelpers';
 
 vi.mock('../src/api/groups', () => ({
@@ -82,7 +82,7 @@ it('AC2: shows an inline error on each missing field', async () => {
     expect(createExpense).not.toHaveBeenCalled();
 });
 
-it('AC3: rejects a zero, negative or non-numeric amount', async () => {
+it.each(['0', '-5'])('AC3: rejects a non-positive amount of %s', async (value) => {
     const user = userEvent.setup();
     renderPage();
 
@@ -90,7 +90,7 @@ it('AC3: rejects a zero, negative or non-numeric amount', async () => {
     await user.type(screen.getByLabelText('Description'), 'Groceries');
     await user.click(screen.getByRole('checkbox', { name: 'alice' }));
 
-    await expectRejectsNonPositiveAmounts(user, amount, 'Save expense', createExpense);
+    await expectRejectsNonPositiveAmount(user, amount, value, 'Save expense', createExpense);
 });
 
 it('AC5: only current group members are selectable as payer', async () => {

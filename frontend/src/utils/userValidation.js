@@ -1,4 +1,15 @@
-export const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+function isValidEmail(email) {
+  const atIndex = email.indexOf('@');
+  if (atIndex <= 0 || atIndex !== email.lastIndexOf('@')) {
+    return false;
+  }
+
+  const domain = email.slice(atIndex + 1);
+  return domain.includes('.')
+      && !domain.startsWith('.')
+      && !domain.endsWith('.')
+      && !/\s/.test(email);
+}
 
 export function validateUserProfile({
   username,
@@ -12,7 +23,7 @@ export function validateUserProfile({
 
   if (!email) {
     newErrors.email = 'Email is required';
-  } else if (!emailRegex.test(email)) {
+  } else if (!isValidEmail(email)) {
     newErrors.email = 'Email is invalid';
   }
 

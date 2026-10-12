@@ -93,6 +93,19 @@ function GroupMembers() {
         return <div className="page"><p>Loading members...</p></div>;
     }
 
+    const confirmationTitle = memberToRemove?.currentUser
+        ? 'Leave group?'
+        : `Remove ${memberToRemove?.username}?`;
+    const confirmationMessage = memberToRemove?.currentUser
+        ? 'You will lose access to this group.'
+        : 'They will lose access to this group.';
+    let confirmationAction = 'Remove';
+    if (removing) {
+        confirmationAction = 'Working...';
+    } else if (memberToRemove?.currentUser) {
+        confirmationAction = 'Leave group';
+    }
+
     return (
         <div className="page">
             <div className="card members-card">
@@ -144,22 +157,13 @@ function GroupMembers() {
 
             {memberToRemove && (
                 <div className="confirmation-backdrop">
-                    <div
+                    <dialog
+                        open
                         className="confirmation-dialog"
-                        role="dialog"
-                        aria-modal="true"
                         aria-labelledby="confirmation-title"
                     >
-                        <h2 id="confirmation-title">
-                            {memberToRemove.currentUser
-                                ? 'Leave group?'
-                                : `Remove ${memberToRemove.username}?`}
-                        </h2>
-                        <p>
-                            {memberToRemove.currentUser
-                                ? 'You will lose access to this group.'
-                                : 'They will lose access to this group.'}
-                        </p>
+                        <h2 id="confirmation-title">{confirmationTitle}</h2>
+                        <p>{confirmationMessage}</p>
                         {error && <p className="error" role="alert">{error}</p>}
                         <div className="confirmation-actions">
                             <button
@@ -177,16 +181,12 @@ function GroupMembers() {
                                 type="button"
                                 className="confirm-remove-button"
                                 disabled={removing}
-                                onClick={handleRemove}
+                                onClick={() => void handleRemove()}
                             >
-                                {removing
-                                    ? 'Working...'
-                                    : memberToRemove.currentUser
-                                        ? 'Leave group'
-                                        : 'Remove'}
+                                {confirmationAction}
                             </button>
                         </div>
-                    </div>
+                    </dialog>
                 </div>
             )}
         </div>

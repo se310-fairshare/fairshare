@@ -6,6 +6,7 @@ target/
 # Node.js and Vite
 node_modules/
 dist/
+coverage/
 .vite/
 npm-debug.log*
 

@@ -8,5 +8,6 @@ UPDATE individual_debt d
     JOIN users u ON d.creator_id = u.id
 SET d.currency = COALESCE(u.currency, 'NZD');
 
+-- VARCHAR2 is Oracle-specific; this project uses MySQL, where VARCHAR is required.
 ALTER TABLE individual_debt
-    MODIFY currency VARCHAR(3) NOT NULL;
+    MODIFY currency VARCHAR(3) NOT NULL; -- NOSONAR

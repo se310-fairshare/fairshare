@@ -17,14 +17,18 @@ export async function expectGroupAccessErrorShown(getGroupMembers, renderPage) {
         .toBeInTheDocument();
 }
 
-export async function expectRejectsNonPositiveAmounts(user, amountField, saveButtonName, mockCreateFn) {
-    for (const value of ['0', '-5']) {
-        await user.clear(amountField);
-        await user.type(amountField, value);
-        await user.click(screen.getByRole('button', { name: saveButtonName }));
+export async function expectRejectsNonPositiveAmount(
+    user,
+    amountField,
+    value,
+    saveButtonName,
+    mockCreateFn
+) {
+    await user.clear(amountField);
+    await user.type(amountField, value);
+    await user.click(screen.getByRole('button', { name: saveButtonName }));
 
-        expect(screen.getByText('Amount must be a positive number')).toBeInTheDocument();
-    }
+    expect(screen.getByText('Amount must be a positive number')).toBeInTheDocument();
     expect(mockCreateFn).not.toHaveBeenCalled();
 }
 

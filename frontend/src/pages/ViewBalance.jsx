@@ -40,7 +40,7 @@ function ViewBalance() {
             try {
                 const groupResult = await getGroup(id);
                 if (groupResult === null) {
-                    setNotFound(true);
+                    setError('This group does not exist, or you are not a member of it.');
                     return;
                 }
 
@@ -59,7 +59,7 @@ function ViewBalance() {
             }
         }
 
-        loadBalance();
+        void loadBalance();
     }, [id]);
 
     if (loading) return <div className="page"><p>Loading balance...</p></div>;
