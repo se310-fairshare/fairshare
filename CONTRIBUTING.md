@@ -76,6 +76,7 @@ The backend owns expense calculation and settlement, exposed as a REST API under
 Persistence uses MySQL through Spring Data JPA and Hibernate, tracked under issue [#22](https://github.com/se310-fairshare/fairshare/issues/22).
 Datasource credentials are supplied only through environment variables and are never committed.
 Hibernate runs with `ddl-auto=validate`, so it checks entity mappings against the existing schema and never creates or alters tables; schema changes come from version-controlled migrations, tracked under issue [#37](https://github.com/se310-fairshare/fairshare/issues/37).
+The full schema is created by a single baseline migration, `backend/src/main/resources/db/migration/V1__initial_schema.sql`. New schema changes go in a new migration (`V2__...`, `V3__...`) rather than edits to an applied one, because Flyway rejects migrations whose checksum has changed.
 Backend testing uses JUnit and Mockito, with Testcontainers for database integration tests.
 Frontend testing uses Vitest with React Testing Library, with test files under `frontend/test/`.
 

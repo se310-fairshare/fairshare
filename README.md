@@ -89,7 +89,7 @@ cd backend
 ./mvnw spring-boot:run
 ```
 
-The backend serves `http://localhost:8080`. On Windows use `mvnw.cmd`. Flyway applies the migrations in `backend/src/main/resources/db/migration` as the application starts, so there is no schema to write by hand.
+The backend serves `http://localhost:8080`. On Windows use `mvnw.cmd`. Flyway applies the migrations in `backend/src/main/resources/db/migration` as the application starts, so there is no schema to write by hand. The schema is created by a single baseline migration, `V1__initial_schema.sql`. A local database created before this baseline was introduced still records the old migration history and fails Flyway validation, so drop and recreate it (`DROP DATABASE fairshare; CREATE DATABASE fairshare;`, using your database name) and let the application rebuild it.
 
 ### 4. Run the frontend
 
