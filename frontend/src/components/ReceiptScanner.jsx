@@ -202,6 +202,7 @@ function ReceiptScanner({ groupId, onApply }) {
                                         type="number"
                                         min="0"
                                         step="0.01"
+                                        inputMode="decimal"
                                         value={item.price}
                                         onChange={(event) => updateItem(index, 'price', event.target.value)}
                                     />
@@ -219,6 +220,7 @@ function ReceiptScanner({ groupId, onApply }) {
                                 type="number"
                                 min="0.01"
                                 step="0.01"
+                                inputMode="decimal"
                                 value={receipt.total}
                                 onChange={(event) => setReceipt((current) => ({
                                     ...current,

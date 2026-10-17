@@ -14,6 +14,7 @@ export function AmountField({ value, onChange, error }) {
             <input
                 id="amount"
                 type="number"
+                inputMode="decimal"
                 step="0.01"
                 value={value}
                 placeholder="0.00"

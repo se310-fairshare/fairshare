@@ -271,3 +271,11 @@
         grid-template-columns: minmax(0, 1fr) 100px;
     }
 }
+
+/* #84 AC5: the scanner's text buttons, e.g. "Close", get a 44px hit area on a phone. */
+@media (max-width: 767px) {
+    .receipt-scanner .text-button {
+        min-height: 44px;
+        padding: 0 var(--space-2);
+    }
+}

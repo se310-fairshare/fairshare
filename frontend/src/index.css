@@ -53,6 +53,9 @@ body {
     color: var(--text-on-dark);
     background-color: var(--bg);
     -webkit-font-smoothing: antialiased;
+    /* #84 AC4: a backstop so nothing can make the whole page scroll sideways. clip, not
+       hidden, so the sticky header keeps working. */
+    overflow-x: clip;
 }
 
 h1,
@@ -632,8 +635,51 @@ form button[type="submit"] {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: var(--space-4);
     min-height: var(--header-height);
     padding: var(--space-2) 18px;
+}
+
+/* #84: the main sections, inline on desktop and behind .menu-button on a phone. */
+.header-nav {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-left: auto;
+}
+
+.nav-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 var(--space-4);
+    color: var(--text-on-dark-muted);
+    font-weight: 500;
+    text-decoration: none;
+    border-radius: var(--radius-pill);
+    transition: color 0.15s, background-color 0.15s;
+}
+
+.nav-link:hover {
+    color: var(--text-on-dark);
+}
+
+/* NavLink marks the section the user is in. */
+.nav-link.active {
+    color: var(--accent);
+}
+
+/* On desktop the profile circle stands in for this text link; the phone menu uses the text. */
+.nav-link-profile {
+    display: none;
+}
+
+.header-nav .profile-button {
+    margin-left: var(--space-2);
+}
+
+.menu-button {
+    display: none;
 }
 
 .profile-button {
@@ -664,4 +710,176 @@ form button[type="submit"] {
     height: 72px;
     width: auto;
     margin: -8px 0;
+}
+
+/* ---- #84: phones and narrow tablets ----
+   Below 768px every screen is a single column, and the page scrolls as a whole rather than
+   each card fitting the window with its own inner scroll, which is awkward to use by touch. */
+
+img {
+    max-width: 100%;
+}
+
+@media (max-width: 767px) {
+    :root {
+        --page-padding: var(--space-4);
+    }
+
+    .page {
+        justify-content: flex-start;
+        padding: var(--page-padding);
+    }
+
+    .card {
+        max-height: none;
+        overflow-y: visible;
+        padding: var(--space-5) var(--space-4);
+        border-radius: var(--radius-input);
+    }
+
+    /* Lists grow with their content; the page scrolls instead. */
+    .group-list,
+    .member-list,
+    .expense-list,
+    .balance-list,
+    .settlement-list,
+    .debt-list,
+    .detailed-balance-list {
+        overflow-y: visible;
+    }
+
+    h1 {
+        font-size: 1.625rem;
+    }
+
+    .card-header {
+        margin-bottom: var(--space-5);
+    }
+
+    /* Fields that sit side by side on desktop stack, one per row (AC1). */
+    .form-row,
+    .form-row-amount,
+    .form-row-3,
+    .form-row-wide-start {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .panel {
+        padding: var(--space-4);
+    }
+}
+
+/* #84 AC5: below 768px the header shows the logo and a menu button; the links drop down
+   beneath the header as full-width, 48px-tall rows. */
+@media (max-width: 767px) {
+    .header-inner {
+        min-height: 64px;
+        padding: var(--space-2) var(--space-4);
+    }
+
+    .logo-image {
+        height: 56px;
+    }
+
+    .menu-button {
+        display: inline-flex;
+        width: 48px;
+        min-height: 48px;
+        margin-left: auto;
+        padding: 0;
+        /* Teal with dark lines, like the app's other buttons. */
+        color: var(--text);
+        background-color: var(--accent);
+        border: 0;
+        border-radius: var(--radius-input);
+    }
+
+    .menu-button:hover {
+        background-color: var(--accent-hover);
+    }
+
+    .header-nav {
+        display: none;
+    }
+
+    .header-nav-open {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+        margin: 0;
+        padding: var(--space-2) var(--space-4) var(--space-4);
+        background-color: var(--bg);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
+    }
+
+    .header-nav-open .nav-link {
+        min-height: 48px;
+        padding: 0 var(--space-3);
+        border-radius: var(--radius-input);
+    }
+
+    .header-nav-open .nav-link.active {
+        background-color: rgba(102, 205, 164, 0.12);
+    }
+
+    .header-nav-open .nav-link-profile {
+        display: inline-flex;
+    }
+
+    .header-nav-open .profile-button {
+        display: none;
+    }
+}
+
+/* #84 AC5: on a phone every tappable element is at least 44x44px. Most buttons already are
+   (48px); these are the ones that fall short on desktop, where precise pointers make that fine. */
+@media (max-width: 767px) {
+    /* e.g. "Mark as paid", "Generate settlement plan", "Remove" on a member */
+    .button-small {
+        min-height: 44px;
+        padding: var(--space-2) var(--space-4);
+    }
+
+    /* Plain text links such as "Back to your groups", "Edit" and "View Detailed" get a
+       44x44 hit area without changing how they look; a short word like "Edit" is centred in
+       it. Tiles and pill links are already big. */
+    .card a:not(.button):not(.group-tile):not(.debt-row) {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    /* The logo image's negative margin left its link only 40px tall. */
+    .logo {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    /* Participant chips on the expense forms */
+    .select-participants label {
+        min-height: 44px;
+    }
+
+    .card .expense-delete-link {
+        min-height: 44px;
+    }
+}
+
+/* #84 AC3: iOS Safari gives date inputs an intrinsic minimum width and centres their value,
+   so on a narrow form they can poke out past the other fields. */
+input[type="date"] {
+    min-width: 0;
+    min-height: 46px;
+}
+
+input[type="date"]::-webkit-date-and-time-value {
+    text-align: left;
 }

@@ -258,3 +258,9 @@ it('AC5: shows the error when the payer is no longer a group member', async () =
 
     await expectShowsPayerRemovedError(user, createExpense, 'Save expense');
 });
+
+it('#84 AC3: the amount field opens the number keypad on a phone', async () => {
+    renderPage();
+
+    expect(await screen.findByLabelText('Amount')).toHaveAttribute('inputmode', 'decimal');
+});

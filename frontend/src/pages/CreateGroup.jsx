@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { createGroup } from '../api/groups';
 
 function CreateGroup() {
@@ -67,6 +67,10 @@ function CreateGroup() {
                         {submitting ? 'Creating…' : 'Create Group'}
                     </button>
                 </form>
+
+                <p className="card-footer">
+                    <Link to="/groups">Back to your groups</Link>
+                </p>
             </div>
         </div>
     );

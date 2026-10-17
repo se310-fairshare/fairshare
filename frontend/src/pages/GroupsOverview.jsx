@@ -33,10 +33,8 @@ function GroupsOverview() {
                 {/* #83: title and main action share a row on desktop widths */}
                 <div className="card-header">
                     <h1>Your Groups</h1>
-                    {/* #83: with no home page, individual debts and spending are reached from here */}
+                    {/* #84: individual debts and spending are in the header navigation now */}
                     <div className="header-actions">
-                        <Link to="/debts" className="button button-secondary">Individual Debts</Link>
-                        <Link to="/spending" className="button button-secondary">My Spending</Link>
                         <Link to="/groups/new" className="button">Create group</Link>
                     </div>
                 </div>

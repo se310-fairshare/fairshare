@@ -30,6 +30,13 @@ describe('CreateGroup', () => {
         vi.clearAllMocks();
     });
 
+    it('links back to the groups list without creating a group', () => {
+        renderPage();
+
+        expect(screen.getByRole('link', { name: 'Back to your groups' })).toHaveAttribute('href', '/groups');
+        expect(createGroup).not.toHaveBeenCalled();
+    });
+
     it('AC1: navigates to the new group page after creation', async () => {
         createGroup.mockResolvedValue({ group: { id: 7, name: 'Flat 3' } });
 

@@ -1,7 +1,8 @@
 /* #83: groups as tiles, filling the wide card on desktop widths. */
 .group-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    /* #84: min() lets a tile shrink below 260px on a phone instead of overflowing the card. */
+    grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
     gap: var(--space-4);
     margin: 0;
     padding: 0;

@@ -196,3 +196,78 @@
     font-size: 13px;
     color: var(--text-muted);
 }
+
+/* ---- #84 AC2: the group screen on a phone ---- */
+@media (max-width: 767px) {
+    .group-card {
+        padding: var(--space-5) var(--space-4);
+    }
+
+    /* "Back to your groups" and "Manage members" wrap under the title rather than squeezing it. */
+    .group-actions {
+        flex-wrap: wrap;
+        gap: var(--space-2) var(--space-4);
+    }
+
+    /* The two desktop columns dissolve so the panels can be put in the order a phone user
+       reads them: what was spent, who owes what, how to settle, then the rest. */
+    .group-sections {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+    }
+
+    .group-column {
+        display: contents;
+    }
+
+    .group-expenses   { order: 1; }
+    .group-balances   { order: 2; }
+    .group-settlement { order: 3; }
+    .group-recurring  { order: 4; }
+    .group-activity   { order: 5; }
+    .group-export     { order: 6; }
+
+    .group-card .panel {
+        padding: var(--space-4);
+    }
+
+    /* Expense and recurring rows become small cards: description, who and when, then the
+       amount on its own line so a long one such as "USD 20.00 (≈ NZD 34.11)" is never cut
+       off, then Edit and Delete. */
+    .expense-list li,
+    .expense-list li:has(.expense-actions) {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 2px;
+        padding: var(--space-3) 0;
+    }
+
+    .expense-description,
+    .expense-meta,
+    .expense-amount,
+    .expense-actions {
+        grid-column: 1;
+        grid-row: auto;
+    }
+
+    .expense-amount {
+        order: 3;
+        font-weight: 500;
+        white-space: normal;
+    }
+
+    .expense-actions {
+        order: 4;
+        gap: var(--space-4);
+    }
+
+    /* A settlement line wraps its "Mark as paid" button underneath when the names are long. */
+    .settlement-list li {
+        flex-wrap: wrap;
+    }
+
+    .settlement-list li > span {
+        flex: 1 1 12rem;
+        min-width: 0;
+    }
+}
