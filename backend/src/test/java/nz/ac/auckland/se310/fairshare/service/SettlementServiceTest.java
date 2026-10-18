@@ -8,8 +8,6 @@ import nz.ac.auckland.se310.fairshare.model.ExpenseGroup;
 import nz.ac.auckland.se310.fairshare.model.Settlement;
 import nz.ac.auckland.se310.fairshare.model.User;
 import nz.ac.auckland.se310.fairshare.repository.ExpenseGroupRepository;
-import nz.ac.auckland.se310.fairshare.repository.RecurringExpenseParticipantRepository;
-import nz.ac.auckland.se310.fairshare.repository.RecurringExpenseRepository;
 import nz.ac.auckland.se310.fairshare.repository.SettlementRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,10 +23,13 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import nz.ac.auckland.se310.fairshare.exception.GroupAccessDeniedException;
+import nz.ac.auckland.se310.fairshare.exception.GroupMemberConflictException;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class ExpenseGroupServiceSettlementPersistenceTest {
+class SettlementServiceTest {
 
     @Mock
     ExpenseGroupRepository groupRepository;
@@ -38,12 +39,8 @@ class ExpenseGroupServiceSettlementPersistenceTest {
     UserRepository userRepository;
     @Mock
     ExpenseService expenseService;
-    @Mock
-    RecurringExpenseRepository recurringExpenseRepository;
-    @Mock
-    RecurringExpenseParticipantRepository recurringExpenseParticipantRepository;
 
-    private ExpenseGroupService service;
+    private SettlementService service;
 
     private static final Long GROUP_ID = 42L;
     private static final Long ALICE = 1L;
@@ -72,8 +69,7 @@ class ExpenseGroupServiceSettlementPersistenceTest {
         group.addMember(bobUser);
         ReflectionTestUtils.setField(group, "id", GROUP_ID);
 
-        service = new ExpenseGroupService(groupRepository, userRepository, expenseService, settlementRepository,
-                recurringExpenseRepository, recurringExpenseParticipantRepository);
+        service = new SettlementService(groupRepository, userRepository, expenseService, settlementRepository);
 
         lenient().when(groupRepository.findByIdAndMembersUserId(GROUP_ID, ALICE)).thenReturn(Optional.of(group));
         lenient().when(groupRepository.findByIdAndMembersUserId(GROUP_ID, BOB)).thenReturn(Optional.of(group));
@@ -257,5 +253,58 @@ class ExpenseGroupServiceSettlementPersistenceTest {
         service.computeSettlement(GROUP_ID, ALICE, new SettlementRequest(List.of()));
 
         verify(settlementRepository).delete(stale);
+    }
+
+    @Test
+    void livePlanDoesNotPersistAnything() {
+        when(expenseService.getExpensesForGroup(GROUP_ID, ALICE)).thenReturn(List.of(
+                new ExpenseResponse(100L, GROUP_ID, ALICE, "alice", new BigDecimal("10.00"), null, null, null)));
+        assertThat(service.getLiveSettlementPlan(GROUP_ID, ALICE))
+                .containsExactly(new SettlementLine(BOB, ALICE, new BigDecimal("5.00")));
+        verify(settlementRepository, never()).save(any());
+        verify(settlementRepository, never()).delete(any());
+        verify(groupRepository, never()).save(any());
+    }
+
+    @Test
+    void nonMembersCannotReadBalancesOrGeneratePlans() {
+        assertThatThrownBy(() -> service.getBalances(GROUP_ID, 99L)).isInstanceOf(GroupAccessDeniedException.class);
+        assertThatThrownBy(() -> service.getLiveSettlementPlan(GROUP_ID, 99L)).isInstanceOf(GroupAccessDeniedException.class);
+        assertThatThrownBy(() -> service.computeSettlement(GROUP_ID, 99L, new SettlementRequest(List.of())))
+                .isInstanceOf(GroupAccessDeniedException.class);
+        verifyNoInteractions(expenseService);
+        verify(settlementRepository, never()).save(any());
+    }
+
+    @Test
+    void unrelatedUserCannotMarkPaymentComplete() {
+        assertThatThrownBy(() -> service.markSettlementPaid(GROUP_ID, BOB, ALICE, 99L))
+                .isInstanceOf(GroupMemberConflictException.class);
+        verify(settlementRepository, never()).save(any());
+    }
+
+    @Test
+    void alreadyPaidSettlementCannotBePaidAgain() {
+        Settlement paid = new Settlement(group, bobUser, aliceUser, new BigDecimal("25.00"));
+        paid.setSettlementDate(java.time.LocalDate.now());
+        stubPendingSettlement(BOB, ALICE, paid);
+        assertThatThrownBy(() -> service.markSettlementPaid(GROUP_ID, BOB, ALICE, BOB))
+                .isInstanceOf(IllegalArgumentException.class).hasMessage("No open settlement found for this user pair");
+        verify(settlementRepository, never()).save(any());
+    }
+
+    @Test
+    void recipientCanMarkPaymentUsingReversedPair() {
+        Settlement open = new Settlement(group, bobUser, aliceUser, new BigDecimal("25.00"));
+        open.setSettlementDate(null);
+        group.getMember(BOB).adjustNetBalance(new BigDecimal("25.00"));
+        group.getMember(ALICE).adjustNetBalance(new BigDecimal("-25.00"));
+        stubPendingSettlement(BOB, ALICE, open);
+        service.markSettlementPaid(GROUP_ID, ALICE, BOB, ALICE);
+        assertThat(open.getSettlementDate()).isEqualTo(java.time.LocalDate.now());
+        assertThat(group.getMember(BOB).getNetBalance()).isZero();
+        assertThat(group.getMember(ALICE).getNetBalance()).isZero();
+        verify(settlementRepository).save(open);
+        verify(groupRepository).save(group);
     }
 }

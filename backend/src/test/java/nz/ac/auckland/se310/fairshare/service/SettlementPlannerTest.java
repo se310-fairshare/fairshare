@@ -11,12 +11,12 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class ExpenseGroupServiceUnitTest {
+class SettlementPlannerTest {
 
     @Test
     void calculateSettlements_returnsEmptyForNullOrEmpty() {
-        assertThat(ExpenseGroupService.calculateSettlements(null)).isEmpty();
-        assertThat(ExpenseGroupService.calculateSettlements(new HashMap<>())).isEmpty();
+        assertThat(SettlementPlanner.calculateSettlements(null)).isEmpty();
+        assertThat(SettlementPlanner.calculateSettlements(new HashMap<>())).isEmpty();
     }
 
     @Test
@@ -25,7 +25,7 @@ class ExpenseGroupServiceUnitTest {
         totals.put(1L, new BigDecimal("10.00")); // debtor
         totals.put(2L, new BigDecimal("-10.00")); // creditor
 
-        List<SettlementLine> lines = ExpenseGroupService.calculateSettlements(totals);
+        List<SettlementLine> lines = SettlementPlanner.calculateSettlements(totals);
 
         assertThat(lines).hasSize(1);
         SettlementLine line = lines.get(0);
@@ -41,7 +41,7 @@ class ExpenseGroupServiceUnitTest {
         totals.put(1L, new BigDecimal("0.009"));
         totals.put(2L, new BigDecimal("-0.009"));
 
-        List<SettlementLine> lines = ExpenseGroupService.calculateSettlements(totals);
+        List<SettlementLine> lines = SettlementPlanner.calculateSettlements(totals);
 
         // rounding should produce a single 0.01 transaction
         assertThat(lines).hasSize(1);
@@ -50,8 +50,8 @@ class ExpenseGroupServiceUnitTest {
 
     @Test
     void handleNullOrEmpty() {
-        assertThat(ExpenseGroupService.calculateSettlements(null)).isEmpty();
-        assertThat(ExpenseGroupService.calculateSettlements(Collections.emptyMap())).isEmpty();
+        assertThat(SettlementPlanner.calculateSettlements(null)).isEmpty();
+        assertThat(SettlementPlanner.calculateSettlements(Collections.emptyMap())).isEmpty();
     }
 
     @Test
@@ -61,7 +61,7 @@ class ExpenseGroupServiceUnitTest {
                 2L, new BigDecimal("0.00")
         );
 
-        assertThat(ExpenseGroupService.calculateSettlements(expenses)).isEmpty();
+        assertThat(SettlementPlanner.calculateSettlements(expenses)).isEmpty();
     }
 
     @Test
@@ -72,7 +72,7 @@ class ExpenseGroupServiceUnitTest {
                 2L, new BigDecimal("-50.00")
         );
 
-        List<SettlementLine> settlements = ExpenseGroupService.calculateSettlements(expenses);
+        List<SettlementLine> settlements = SettlementPlanner.calculateSettlements(expenses);
 
         assertThat(settlements).hasSize(1);
         assertThat(settlements.get(0).fromUserId()).isEqualTo(1L);
@@ -100,7 +100,7 @@ class ExpenseGroupServiceUnitTest {
                 4L, new BigDecimal("-20.00")
         );
 
-        List<SettlementLine> settlements = ExpenseGroupService.calculateSettlements(expenses);
+        List<SettlementLine> settlements = SettlementPlanner.calculateSettlements(expenses);
 
         assertThat(settlements).hasSize(2);
 
@@ -136,10 +136,23 @@ class ExpenseGroupServiceUnitTest {
                 5L, new BigDecimal("-3.00")
         );
 
-        List<SettlementLine> settlements = ExpenseGroupService.calculateSettlements(expenses);
+        List<SettlementLine> settlements = SettlementPlanner.calculateSettlements(expenses);
 
         assertThat(settlements).hasSize(3);
         verifyBalancesCleared(expenses, settlements);
+    }
+
+    @Test
+    void planningDoesNotMutateBalancesAndCanBeRepeated() {
+        Map<Long, BigDecimal> balances = new java.util.LinkedHashMap<>();
+        balances.put(1L, new BigDecimal("10.005"));
+        balances.put(2L, new BigDecimal("-10.005"));
+        balances.put(3L, null);
+        Map<Long, BigDecimal> original = new HashMap<>(balances);
+        var first = SettlementPlanner.calculateSettlements(balances);
+        assertThat(first).containsExactly(new SettlementLine(1L, 2L, new BigDecimal("10.01")));
+        assertThat(SettlementPlanner.calculateSettlements(balances)).isEqualTo(first);
+        assertThat(balances).isEqualTo(original);
     }
 
     /**

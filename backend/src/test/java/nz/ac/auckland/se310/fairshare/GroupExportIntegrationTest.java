@@ -12,6 +12,7 @@ import nz.ac.auckland.se310.fairshare.repository.ExpenseRepository;
 import nz.ac.auckland.se310.fairshare.repository.ExpenseShareRepository;
 import nz.ac.auckland.se310.fairshare.repository.SettlementRepository;
 import nz.ac.auckland.se310.fairshare.service.ExpenseGroupService;
+import nz.ac.auckland.se310.fairshare.service.SettlementService;
 import nz.ac.auckland.se310.fairshare.service.ExpenseService;
 import nz.ac.auckland.se310.fairshare.service.ExportFormat;
 import nz.ac.auckland.se310.fairshare.service.GroupExportService;
@@ -61,6 +62,7 @@ class GroupExportIntegrationTest {
 
     @Autowired GroupExportService exportService;
     @Autowired ExpenseGroupService groupService;
+    @Autowired SettlementService settlementService;
     @Autowired ExpenseService expenseService;
     @Autowired ExpenseGroupRepository groupRepository;
     @Autowired ExpenseRepository expenseRepository;
@@ -211,13 +213,13 @@ class GroupExportIntegrationTest {
     void pdfAc2_netBalanceMatchesTheBalancesEndpointIncludingPaidSettlements() throws IOException {
         groupService.addMember(groupId, CAROL_EMAIL, aliceId);
         recordGroceriesAndDinner();
-        groupService.computeSettlement(groupId, carolId, new SettlementRequest(List.of()));
-        groupService.markSettlementPaid(groupId, carolId, bobId, carolId);
+        settlementService.computeSettlement(groupId, carolId, new SettlementRequest(List.of()));
+        settlementService.markSettlementPaid(groupId, carolId, bobId, carolId);
 
         String text = pdfText(pdf(groupId, aliceId));
 
         // Carol's 7.06 to Bob clears his balance, though his paid and share totals are unchanged.
-        assertThat(groupService.getBalances(groupId, aliceId))
+        assertThat(settlementService.getBalances(groupId, aliceId))
                 .extracting(MemberBalance::balance)
                 .usingElementComparator(BigDecimal::compareTo)
                 .containsExactly(new BigDecimal("-2.94"), BigDecimal.ZERO, new BigDecimal("2.94"));

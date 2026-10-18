@@ -18,6 +18,7 @@ import nz.ac.auckland.se310.fairshare.repository.ExpenseRepository;
 import nz.ac.auckland.se310.fairshare.repository.ExpenseShareRepository;
 import nz.ac.auckland.se310.fairshare.repository.SettlementRepository;
 import nz.ac.auckland.se310.fairshare.service.ExpenseGroupService;
+import nz.ac.auckland.se310.fairshare.service.SettlementService;
 import nz.ac.auckland.se310.fairshare.service.ExpenseService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -57,6 +58,7 @@ class ExpenseIntegrationTest {
     private static final String TAXI_AMOUNT = "10.00";
 
     @Autowired ExpenseGroupService groupService;
+    @Autowired SettlementService settlementService;
     @Autowired ExpenseService expenseService;
     @Autowired ExpenseGroupRepository groupRepository;
     @Autowired ExpenseRepository expenseRepository;
@@ -174,7 +176,7 @@ class ExpenseIntegrationTest {
                 Map.entry(aliceId, new BigDecimal("-67500000.00")),
                 Map.entry(bobId, new BigDecimal("67500000.00")));
         // Settling up stores the same size of amount in the settlement table.
-        assertThat(groupService.computeSettlement(groupId, aliceId, new SettlementRequest(List.of())))
+        assertThat(settlementService.computeSettlement(groupId, aliceId, new SettlementRequest(List.of())))
                 .extracting(SettlementLine::amount)
                 .containsExactly(new BigDecimal("67500000.00"));
     }
@@ -308,12 +310,12 @@ class ExpenseIntegrationTest {
     void historyAc5_reopenedPlanUsesEditedExpenseEvenWhenClientSendsOldBalances() {
         var created = expenseService.createExpense(groupId, new CreateExpenseRequest(
                 new BigDecimal("40.00"), "Dinner", aliceId, List.of(aliceId, bobId), null), aliceId);
-        var staleRequest = new SettlementRequest(groupService.getBalances(groupId, bobId));
-        assertThat(groupService.computeSettlement(groupId, bobId, staleRequest))
+        var staleRequest = new SettlementRequest(settlementService.getBalances(groupId, bobId));
+        assertThat(settlementService.computeSettlement(groupId, bobId, staleRequest))
                 .containsExactly(new SettlementLine(bobId, aliceId, new BigDecimal("20.00")));
         expenseService.updateExpense(groupId, new CreateExpenseRequest(new BigDecimal("10.00"),
                 "Dinner", aliceId, List.of(aliceId, bobId), null), aliceId, created.id());
-        assertThat(groupService.computeSettlement(groupId, bobId, staleRequest))
+        assertThat(settlementService.computeSettlement(groupId, bobId, staleRequest))
                 .containsExactly(new SettlementLine(bobId, aliceId, new BigDecimal("5.00")));
         assertThat(settlementRepository.findByGroupId(groupId)).hasSize(1)
                 .allSatisfy(payment -> assertThat(payment.getAmount()).isEqualByComparingTo("5.00"));
@@ -323,12 +325,12 @@ class ExpenseIntegrationTest {
     void historyAc5_deletedLastExpenseClearsTheOldPendingPlan() {
         var created = expenseService.createExpense(groupId, new CreateExpenseRequest(
                 new BigDecimal("40.00"), "Dinner", aliceId, List.of(aliceId, bobId), null), aliceId);
-        var staleRequest = new SettlementRequest(groupService.getBalances(groupId, bobId));
-        assertThat(groupService.computeSettlement(groupId, bobId, staleRequest)).hasSize(1);
+        var staleRequest = new SettlementRequest(settlementService.getBalances(groupId, bobId));
+        assertThat(settlementService.computeSettlement(groupId, bobId, staleRequest)).hasSize(1);
         expenseService.deleteExpense(groupId, created.id(), aliceId);
-        assertThat(groupService.computeSettlement(groupId, bobId, staleRequest)).isEmpty();
+        assertThat(settlementService.computeSettlement(groupId, bobId, staleRequest)).isEmpty();
         assertThat(settlementRepository.findByGroupId(groupId)).isEmpty();
-        assertThat(groupService.getBalances(groupId, bobId))
+        assertThat(settlementService.getBalances(groupId, bobId))
                 .allSatisfy(balance -> assertThat(balance.balance()).isEqualByComparingTo("0.00"));
     }
 
@@ -337,14 +339,14 @@ class ExpenseIntegrationTest {
         var created = expenseService.createExpense(groupId, new CreateExpenseRequest(
                 new BigDecimal("40.00"), "Dinner", aliceId, List.of(aliceId, bobId), null), aliceId);
         var request = new SettlementRequest(List.of());
-        groupService.computeSettlement(groupId, bobId, request);
-        groupService.markSettlementPaid(groupId, bobId, aliceId, bobId);
+        settlementService.computeSettlement(groupId, bobId, request);
+        settlementService.markSettlementPaid(groupId, bobId, aliceId, bobId);
         expenseService.updateExpense(groupId, new CreateExpenseRequest(new BigDecimal("10.00"),
                 "Dinner", aliceId, List.of(aliceId, bobId), null), aliceId, created.id());
-        assertThat(groupService.computeSettlement(groupId, bobId, request))
+        assertThat(settlementService.computeSettlement(groupId, bobId, request))
                 .containsExactly(new SettlementLine(aliceId, bobId, new BigDecimal("15.00")));
         expenseService.deleteExpense(groupId, created.id(), aliceId);
-        assertThat(groupService.computeSettlement(groupId, bobId, request))
+        assertThat(settlementService.computeSettlement(groupId, bobId, request))
                 .containsExactly(new SettlementLine(aliceId, bobId, new BigDecimal("20.00")));
         var paid = settlementRepository.findByGroupId(groupId).stream()
                 .filter(payment -> payment.getSettlementDate() != null).toList();

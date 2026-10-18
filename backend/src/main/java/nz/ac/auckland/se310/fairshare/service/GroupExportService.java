@@ -70,16 +70,16 @@ public class GroupExportService {
     private final ExpenseGroupRepository groupRepository;
     private final ExpenseRepository expenseRepository;
     private final ExpenseShareRepository expenseShareRepository;
-    private final ExpenseGroupService groupService;
+    private final SettlementService settlementService;
     private final Clock clock;
 
     public GroupExportService(ExpenseGroupRepository groupRepository, ExpenseRepository expenseRepository,
-                              ExpenseShareRepository expenseShareRepository, ExpenseGroupService groupService,
+                              ExpenseShareRepository expenseShareRepository, SettlementService settlementService,
                               Clock clock) {
         this.groupRepository = groupRepository;
         this.expenseRepository = expenseRepository;
         this.expenseShareRepository = expenseShareRepository;
-        this.groupService = groupService;
+        this.settlementService = settlementService;
         this.clock = clock;
     }
 
@@ -114,7 +114,7 @@ public class GroupExportService {
         List<ExpenseShare> shares = expenseShareRepository.findByExpenseGroupId(groupId);
 
         // The same calculation as GET /groups/{id}/balances, so the two never disagree.
-        Map<Long, BigDecimal> netBalances = groupService.getBalances(groupId, currentUserId).stream()
+        Map<Long, BigDecimal> netBalances = settlementService.getBalances(groupId, currentUserId).stream()
                 .collect(Collectors.toMap(MemberBalance::userId, MemberBalance::balance));
         Map<Long, BigDecimal> totalPaid = expenses.stream()
                 .collect(Collectors.groupingBy(expense -> expense.getPaidBy().getId(),

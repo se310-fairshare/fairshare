@@ -10,6 +10,7 @@ import nz.ac.auckland.se310.fairshare.dto.SettlementLine;
 import nz.ac.auckland.se310.fairshare.dto.SettlementRequest;
 import nz.ac.auckland.se310.fairshare.security.CurrentUserProvider;
 import nz.ac.auckland.se310.fairshare.service.ExpenseGroupService;
+import nz.ac.auckland.se310.fairshare.service.SettlementService;
 import nz.ac.auckland.se310.fairshare.service.ExportFormat;
 import nz.ac.auckland.se310.fairshare.service.ExportedFile;
 import nz.ac.auckland.se310.fairshare.service.GroupExportService;
@@ -28,12 +29,14 @@ import java.util.List;
 public class ExpenseGroupController {
 
     private final ExpenseGroupService groupService;
+    private final SettlementService settlementService;
     private final GroupExportService exportService;
     private final CurrentUserProvider currentUser;
 
-    public ExpenseGroupController(ExpenseGroupService groupService, GroupExportService exportService,
+    public ExpenseGroupController(ExpenseGroupService groupService, SettlementService settlementService, GroupExportService exportService,
                                   CurrentUserProvider currentUser) {
         this.groupService = groupService;
+        this.settlementService = settlementService;
         this.exportService = exportService;
         this.currentUser = currentUser;
     }
@@ -63,7 +66,7 @@ public class ExpenseGroupController {
 
     @GetMapping("/{id}/balances")
     public List<MemberBalance> balances(@PathVariable Long id) {
-        return groupService.getBalances(id, currentUser.currentUserId());
+        return settlementService.getBalances(id, currentUser.currentUserId());
     }
 
     // #12: downloads the group's expense data as ?format=csv or ?format=pdf.
@@ -85,7 +88,7 @@ public class ExpenseGroupController {
     public List<SettlementLine> settlement(
             @PathVariable Long id,
             @RequestBody SettlementRequest request) {
-        return groupService.computeSettlement(id, currentUser.currentUserId(), request);
+        return settlementService.computeSettlement(id, currentUser.currentUserId(), request);
     }
 
     @PatchMapping("/{id}/settlements/{fromUserId}/{toUserId}/paid")
@@ -94,7 +97,7 @@ public class ExpenseGroupController {
             @PathVariable Long fromUserId,
             @PathVariable Long toUserId) {
         // This marks a pending settlement as completed from the perspective of the current user.
-        groupService.markSettlementPaid(id, fromUserId, toUserId, currentUser.currentUserId());
+        settlementService.markSettlementPaid(id, fromUserId, toUserId, currentUser.currentUserId());
         return ResponseEntity.noContent().build();
     }
 

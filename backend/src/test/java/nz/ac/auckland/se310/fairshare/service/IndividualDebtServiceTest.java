@@ -18,8 +18,6 @@ import nz.ac.auckland.se310.fairshare.model.User;
 import nz.ac.auckland.se310.fairshare.model.UserInGroup;
 import nz.ac.auckland.se310.fairshare.repository.ExpenseGroupRepository;
 import nz.ac.auckland.se310.fairshare.repository.IndividualDebtRepository;
-import nz.ac.auckland.se310.fairshare.repository.RecurringExpenseParticipantRepository;
-import nz.ac.auckland.se310.fairshare.repository.RecurringExpenseRepository;
 import nz.ac.auckland.se310.fairshare.repository.SettlementRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,7 +46,7 @@ import static org.mockito.Mockito.when;
 /**
  * #2: individual debt creation, authorization and the combined net-balance calculation.
  * Runs without a database - all repositories are stubbed. Group balances go through a real
- * ExpenseGroupService, so these tests check agreement with the group's own settle-up plan.
+ * SettlementService, so these tests check agreement with the group's own settle-up plan.
  */
 class IndividualDebtServiceTest {
 
@@ -92,16 +90,15 @@ class IndividualDebtServiceTest {
         when(individualDebtRepository.findBetweenUsers(anyLong(), anyLong())).thenReturn(List.of());
         when(groupRepository.findSharedGroups(anyLong(), anyLong())).thenReturn(List.of());
 
-        ExpenseGroupService expenseGroupService = new ExpenseGroupService(groupRepository, userRepository,
-                expenseService, settlementRepository, mock(RecurringExpenseRepository.class),
-                mock(RecurringExpenseParticipantRepository.class));
+        SettlementService settlementService = new SettlementService(groupRepository, userRepository,
+                expenseService, settlementRepository);
 
         // No Spring proxy exists in this test, so "self" is wired to a plain instance; that's
         // equivalent here since there's no transactional interception to route through either way.
         service = new IndividualDebtService(individualDebtRepository, userRepository, groupRepository,
-                expenseGroupService, new CurrencyService(), exchangeRateProvider, null);
+                settlementService, new CurrencyService(), exchangeRateProvider, null);
         service = new IndividualDebtService(individualDebtRepository, userRepository, groupRepository,
-                expenseGroupService, new CurrencyService(), exchangeRateProvider, service);
+                settlementService, new CurrencyService(), exchangeRateProvider, service);
     }
 
     @Test

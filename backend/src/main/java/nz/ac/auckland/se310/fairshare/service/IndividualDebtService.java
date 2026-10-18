@@ -44,7 +44,7 @@ public class IndividualDebtService {
     private final IndividualDebtRepository individualDebtRepository;
     private final UserRepository userRepository;
     private final ExpenseGroupRepository groupRepository;
-    private final ExpenseGroupService expenseGroupService;
+    private final SettlementService settlementService;
     private final CurrencyService currencyService;
     private final ExchangeRateProvider exchangeRateProvider;
     // #2: injected lazily so getBalancesOverview calls getNetBalance through the Spring proxy
@@ -52,13 +52,13 @@ public class IndividualDebtService {
     private final IndividualDebtService self;
 
     public IndividualDebtService(IndividualDebtRepository individualDebtRepository, UserRepository userRepository,
-                                  ExpenseGroupRepository groupRepository, ExpenseGroupService expenseGroupService,
+                                  ExpenseGroupRepository groupRepository, SettlementService settlementService,
                                   CurrencyService currencyService, ExchangeRateProvider exchangeRateProvider,
                                   @Lazy IndividualDebtService self) {
         this.individualDebtRepository = individualDebtRepository;
         this.userRepository = userRepository;
         this.groupRepository = groupRepository;
-        this.expenseGroupService = expenseGroupService;
+        this.settlementService = settlementService;
         this.currencyService = currencyService;
         this.exchangeRateProvider = exchangeRateProvider;
         this.self = self;
@@ -200,7 +200,7 @@ public class IndividualDebtService {
         BigDecimal total = BigDecimal.ZERO;
         for (ExpenseGroup group : groupRepository.findSharedGroups(userAId, userBId)) {
             String groupCurrency = group.getBaseCurrency().name();
-            for (SettlementLine line : expenseGroupService.getLiveSettlementPlan(group.getId(), userAId)) {
+            for (SettlementLine line : settlementService.getLiveSettlementPlan(group.getId(), userAId)) {
                 if (line.fromUserId().equals(userAId) && line.toUserId().equals(userBId)) {
                     total = total.add(converter.convert(line.amount(), groupCurrency, today));
                 } else if (line.fromUserId().equals(userBId) && line.toUserId().equals(userAId)) {
