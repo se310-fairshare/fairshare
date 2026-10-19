@@ -108,6 +108,38 @@ npm run dev
 
 The app is then at `http://localhost:5173`. Open it and register an account to get started. Register a second account as well if you want to try groups, because members are added by looking up an existing account.
 
+### Test from a mobile device
+
+Mobile testing needs the frontend and backend to be reachable from other devices on the local network. Only do this on a trusted network, and do not expose the development servers directly to the internet.
+
+1. Connect the development computer and mobile device to the same local network, then find the computer's local network address. The examples below use `<development-machine-ip>` as a placeholder.
+2. Start Vite on all network interfaces instead of its default loopback-only interface:
+
+   ```bash
+   cd frontend
+   npm run dev -- --host 0.0.0.0 --port 5173
+   ```
+
+3. Make the frontend call a backend address the phone can reach. `localhost` on the phone refers to the phone itself, so replace a hard-coded `http://localhost:8080` API base with either a configurable value or the hostname that served the frontend. For example:
+
+   ```js
+   export const API_BASE = `http://${window.location.hostname}:8080`;
+   ```
+
+4. Add `http://<development-machine-ip>:5173` to the backend's allowed CORS origins. Keep the existing localhost origin so desktop development continues to work. If the backend has been configured to listen only on loopback, configure it to listen on the local network as well.
+5. Allow inbound connections to the frontend and backend development ports in the computer's firewall if they are blocked.
+6. On the phone, open `http://<development-machine-ip>:5173` and register or log in normally.
+
+Opening the phone's native camera or gallery can suspend the browser and disconnect Vite's hot-reload client. If the page refreshes when returning to the app, test against a production build served by Vite preview instead:
+
+```bash
+cd frontend
+npm run build
+npx vite preview --host 0.0.0.0 --port 5173
+```
+
+Restart the backend after changing its CORS configuration. These network-access changes are intended for local testing only and should not be committed with a personal network address.
+
 ### Things that catch people out
 
 - **Start the backend first.** The frontend asks the backend who you are before it renders, so its pages fail rather than degrade when the backend is down.
