@@ -3,10 +3,19 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ReceiptScanner from '../src/components/ReceiptScanner.jsx';
 import { extractReceipt } from '../src/api/receipts.js';
+import { prepareReceiptImage } from '../src/utils/receiptImage.js';
 
 vi.mock('../src/api/receipts.js', () => ({
     extractReceipt: vi.fn(),
 }));
+
+vi.mock('../src/utils/receiptImage.js', async (importOriginal) => {
+    const original = await importOriginal();
+    return {
+        ...original,
+        prepareReceiptImage: vi.fn((file) => Promise.resolve(file)),
+    };
+});
 
 const RECEIPT = {
     items: [
@@ -19,6 +28,7 @@ const RECEIPT = {
 beforeEach(() => {
     vi.clearAllMocks();
     extractReceipt.mockResolvedValue({ receipt: RECEIPT });
+    prepareReceiptImage.mockImplementation((file) => Promise.resolve(file));
 });
 
 function imageFile() {
@@ -77,7 +87,7 @@ it('AC3: explains extraction failure and leaves manual entry available', async (
     expect(screen.getByRole('button', { name: 'Enter manually instead' })).toBeEnabled();
 });
 
-it('AC4: rejects an unsupported format before making an API request', async () => {
+it('AC4: rejects a non-image format before making an API request', async () => {
     const user = userEvent.setup();
     render(<ReceiptScanner groupId="4" onApply={vi.fn()} />);
 
@@ -85,11 +95,11 @@ it('AC4: rejects an unsupported format before making an API request', async () =
     const file = new File(['hello'], 'receipt.txt', { type: 'text/plain' });
     fireEvent.change(screen.getByLabelText('Choose image'), { target: { files: [file] } });
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('JPG or PNG');
+    expect(await screen.findByRole('alert')).toHaveTextContent('photo or image');
     expect(extractReceipt).not.toHaveBeenCalled();
 });
 
-it('AC4: rejects an image larger than 7 MB before making an API request', async () => {
+it('prepares a large mobile image before making the API request', async () => {
     const user = userEvent.setup();
     render(<ReceiptScanner groupId="4" onApply={vi.fn()} />);
 
@@ -97,8 +107,24 @@ it('AC4: rejects an image larger than 7 MB before making an API request', async 
     const file = new File([new Uint8Array(7 * 1024 * 1024 + 1)], 'large.jpg', {
         type: 'image/jpeg',
     });
+    const prepared = imageFile();
+    prepareReceiptImage.mockResolvedValue(prepared);
     fireEvent.change(screen.getByLabelText('Choose image'), { target: { files: [file] } });
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('7 MB');
+    expect(await screen.findByDisplayValue('Milk')).toBeInTheDocument();
+    expect(prepareReceiptImage).toHaveBeenCalledWith(file);
+    expect(extractReceipt).toHaveBeenCalledWith('4', prepared);
+});
+
+it('explains when the phone cannot convert an image format', async () => {
+    const user = userEvent.setup();
+    prepareReceiptImage.mockRejectedValue(new Error('This browser could not decode the selected image.'));
+    render(<ReceiptScanner groupId="4" onApply={vi.fn()} />);
+
+    await user.click(screen.getByRole('button', { name: /scan or upload receipt/i }));
+    const file = new File(['heic'], 'receipt.heic', { type: 'image/heic' });
+    fireEvent.change(screen.getByLabelText('Choose image'), { target: { files: [file] } });
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('could not be prepared');
     expect(extractReceipt).not.toHaveBeenCalled();
 });

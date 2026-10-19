@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { extractReceipt } from '../api/receipts.js';
+import { isReceiptImage, prepareReceiptImage } from '../utils/receiptImage.js';
 import './ReceiptScanner.css';
 
-const MAX_FILE_SIZE = 7 * 1024 * 1024;
-const ACCEPTED_TYPES = new Set(['image/jpeg', 'image/png']);
-const FILE_REQUIREMENTS = 'Choose a JPG or PNG image no larger than 7 MB.';
+const FILE_REQUIREMENTS = 'Choose a photo or image file. Mobile photos are converted automatically.';
+const CONVERSION_ERROR = 'This photo format could not be prepared on your phone. Try a screenshot or a JPG/PNG image.';
 
 function asMoney(value) {
     const number = Number(value);
@@ -29,14 +29,23 @@ function ReceiptScanner({ groupId, onApply }) {
         setError('');
         setReceipt(null);
 
-        if (!file || !ACCEPTED_TYPES.has(file.type) || file.size > MAX_FILE_SIZE) {
+        if (!isReceiptImage(file)) {
             setError(FILE_REQUIREMENTS);
             return;
         }
 
         setProcessing(true);
+        let uploadFile;
         try {
-            const result = await extractReceipt(groupId, file);
+            uploadFile = await prepareReceiptImage(file);
+        } catch {
+            setError(CONVERSION_ERROR);
+            setProcessing(false);
+            return;
+        }
+
+        try {
+            const result = await extractReceipt(groupId, uploadFile);
             if (result.error) {
                 setError(result.error);
                 return;
@@ -126,7 +135,7 @@ function ReceiptScanner({ groupId, onApply }) {
             <div className="receipt-panel-heading">
                 <div>
                     <strong>Scan a receipt</strong>
-                    <p>Upload a JPG or PNG, then review the extracted details.</p>
+                    <p>Take a photo or choose an image, then review the extracted details.</p>
                 </div>
                 {!processing && (
                     <button type="button" className="text-button" onClick={continueManually}>
@@ -145,7 +154,7 @@ function ReceiptScanner({ groupId, onApply }) {
                             id="receipt-camera"
                             className="receipt-file-input"
                             type="file"
-                            accept="image/jpeg,image/png"
+                            accept="image/*"
                             capture="environment"
                             onChange={handleFile}
                         />
@@ -156,11 +165,11 @@ function ReceiptScanner({ groupId, onApply }) {
                             id="receipt-file"
                             className="receipt-file-input"
                             type="file"
-                            accept="image/jpeg,image/png"
+                            accept="image/*"
                             onChange={handleFile}
                         />
                     </div>
-                    <small className="receipt-file-help">JPG or PNG · maximum 7 MB</small>
+                    <small className="receipt-file-help">Mobile photos are resized and converted automatically</small>
                 </>
             )}
 
